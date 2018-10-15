@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_hint">Pesquisar</string>
+    <string name="action_back">Voltar</string>
+    <string name="action_voice_search">Busca por voz</string>
+    <string name="action_clear_search">Limpar busca</string>
+</resources>
+

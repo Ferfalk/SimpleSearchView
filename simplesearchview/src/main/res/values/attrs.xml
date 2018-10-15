@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="SimpleSearchView">
+        <attr name="backIconAlpha" />
+        <attr name="iconsAlpha" />
+
+        <attr name="backIconTint" format="color" />
+        <attr name="iconsTint" format="color" />
+
+        <attr name="cursorColor" format="color" />
+        <attr name="hintColor" format="color" />
+
+        <attr name="searchBackground" format="reference|color" />
+
+        <attr name="searchBackIcon" format="reference" />
+        <attr name="searchClearIcon" format="reference" />
+        <attr name="searchVoiceIcon" format="reference" />
+
+        <attr name="voiceSearch" format="boolean" />
+
+        <attr name="voiceSearchPrompt" format="string" />
+
+        <attr name="android:hint" format="string" />
+        <attr name="android:inputType" />
+        <attr name="android:textColor" format="color" />
+
+        <attr name="type" format="enum">
+            <enum name="bar" value="0" />
+            <enum name="card" value="1" />
+        </attr>
+    </declare-styleable>
+</resources>

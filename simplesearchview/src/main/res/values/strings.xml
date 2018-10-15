@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_hint">Search</string>
+    <string name="action_back">Back</string>
+    <string name="action_voice_search">Voice search</string>
+    <string name="action_clear_search">Clear search</string>
+</resources>

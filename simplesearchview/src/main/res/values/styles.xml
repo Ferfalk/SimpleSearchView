@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="SearchViewIcon">
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+        <item name="android:paddingLeft">@dimen/search_icon_padding</item>
+        <item name="android:paddingRight">@dimen/search_icon_padding</item>
+        <item name="android:scaleType">center</item>
+        <item name="android:alpha">0.54</item>
+    </style>
+</resources>
