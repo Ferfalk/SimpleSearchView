@@ -1,7 +1,7 @@
 # SimpleSearchView
 A simple SearchView for Android based on Material Design
 
-* API 15+ *(Reveal animation for API 21 and above, fade animation otherwise)*
+* API 16+ *(Reveal animation for API 21 and above, fade animation otherwise)*
 * Two styles
 * Option to hide TabLayout automatically when it opens
 * Text and animations listeners
