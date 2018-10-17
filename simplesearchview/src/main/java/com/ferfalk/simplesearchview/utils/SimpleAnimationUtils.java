@@ -20,10 +20,10 @@ import java.util.List;
 /**
  * @author Fernando A. H. Falkiewicz
  */
-public class AnimationUtils {
+public class SimpleAnimationUtils {
     public static final int ANIMATION_DURATION_DEFAULT = 250;
 
-    private AnimationUtils() {
+    private SimpleAnimationUtils() {
     }
 
 

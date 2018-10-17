@@ -6,7 +6,7 @@ import android.view.View;
 /**
  * @author Fernando A. H. Falkiewicz
  */
-public abstract class SimpleAnimationListener implements AnimationUtils.AnimationListener {
+public abstract class SimpleAnimationListener implements SimpleAnimationUtils.AnimationListener {
     @Override
     public boolean onAnimationStart(@NonNull View view) {
         // No action

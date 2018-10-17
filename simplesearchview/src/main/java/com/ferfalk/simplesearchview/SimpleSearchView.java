@@ -34,11 +34,11 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 
-import com.ferfalk.simplesearchview.utils.AnimationUtils;
 import com.ferfalk.simplesearchview.utils.ContextUtils;
 import com.ferfalk.simplesearchview.utils.DimensUtils;
 import com.ferfalk.simplesearchview.utils.EditTextReflectionUtils;
 import com.ferfalk.simplesearchview.utils.SimpleAnimationListener;
+import com.ferfalk.simplesearchview.utils.SimpleAnimationUtils;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -68,7 +68,7 @@ public class SimpleSearchView extends FrameLayout {
     }
 
     private Context context;
-    private int animationDuration = AnimationUtils.ANIMATION_DURATION_DEFAULT;
+    private int animationDuration = SimpleAnimationUtils.ANIMATION_DURATION_DEFAULT;
     private Point revealAnimationCenter;
     private CharSequence query;
     private CharSequence oldQuery;
@@ -355,7 +355,7 @@ public class SimpleSearchView extends FrameLayout {
         searchEditText.requestFocus();
 
         if (animate) {
-            AnimationUtils.AnimationListener animationListener = new SimpleAnimationListener() {
+            SimpleAnimationUtils.AnimationListener animationListener = new SimpleAnimationListener() {
                 @Override
                 public boolean onAnimationEnd(@NonNull View view) {
                     if (searchViewListener != null) {
@@ -364,7 +364,7 @@ public class SimpleSearchView extends FrameLayout {
                     return false;
                 }
             };
-            AnimationUtils.revealOrFadeIn(this, animationDuration, animationListener, getRevealAnimationCenter()).start();
+            SimpleAnimationUtils.revealOrFadeIn(this, animationDuration, animationListener, getRevealAnimationCenter()).start();
         } else {
             setVisibility(View.VISIBLE);
         }
@@ -398,7 +398,7 @@ public class SimpleSearchView extends FrameLayout {
         clearFocus();
 
         if (animate) {
-            AnimationUtils.AnimationListener animationListener = new SimpleAnimationListener() {
+            SimpleAnimationUtils.AnimationListener animationListener = new SimpleAnimationListener() {
                 @Override
                 public boolean onAnimationEnd(@NonNull View view) {
                     if (searchViewListener != null) {
@@ -407,7 +407,7 @@ public class SimpleSearchView extends FrameLayout {
                     return false;
                 }
             };
-            AnimationUtils.hideOrFadeOut(this, animationDuration, animationListener, getRevealAnimationCenter()).start();
+            SimpleAnimationUtils.hideOrFadeOut(this, animationDuration, animationListener, getRevealAnimationCenter()).start();
         } else {
             setVisibility(View.INVISIBLE);
         }
@@ -468,7 +468,7 @@ public class SimpleSearchView extends FrameLayout {
         }
 
         if (animate) {
-            AnimationUtils.verticalSlideView(tabLayout, 0, tabLayoutInitialHeight, animationDuration).start();
+            SimpleAnimationUtils.verticalSlideView(tabLayout, 0, tabLayoutInitialHeight, animationDuration).start();
         } else {
             tabLayout.setVisibility(View.VISIBLE);
         }
@@ -492,7 +492,7 @@ public class SimpleSearchView extends FrameLayout {
         }
 
         if (animate) {
-            AnimationUtils.verticalSlideView(tabLayout, tabLayout.getHeight(), 0, animationDuration).start();
+            SimpleAnimationUtils.verticalSlideView(tabLayout, tabLayout.getHeight(), 0, animationDuration).start();
         } else {
             tabLayout.setVisibility(View.GONE);
         }
