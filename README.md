@@ -55,6 +55,8 @@ Add SimpleSearchView to your AppBarLayout:
 </android.support.design.widget.AppBarLayout>
 ```
 
+[Setup with an MenuItem](#menuitem) or [Open manually](#open-and-close-manually)
+
 Setup the listener:  
 *Return true to override default behaviour*
 ```java
@@ -77,12 +79,6 @@ simpleSearchView.setOnQueryTextListener(new SimpleSearchView.OnQueryTextListener
                 return false;
             }
         });
-```
-
-Open and close the SimpleSearchView:
-```java
-simpleSearchView.showSearch();
-simpleSearchView.closeSearch();
 ```
 
 ## Options
@@ -175,6 +171,13 @@ Add it to the layout with a TabLayout:
 Setup the TabLayout:
 ```java
 simpleSearchView.setTabLayout(findViewById(R.id.tabLayout));
+```
+
+
+### Open and close manually
+```java
+simpleSearchView.showSearch();
+simpleSearchView.closeSearch();
 ```
 
 ### OnBackPressed
