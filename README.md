@@ -17,7 +17,7 @@ A simple SearchView for Android based on Material Design
 
 Gradle dependency:
 ```groovy
-implementation 'com.github.Ferfalk:SimpleSearchView:0.1.1'
+implementation 'com.github.Ferfalk:SimpleSearchView:0.1.2'
 ```
 
 
