@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'com.github.dcendents.android-maven'
 
 android {
     compileSdkVersion rootProject.compileSdkVersion
@@ -33,4 +34,26 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+}
+
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+
+task javadoc(type: Javadoc) {
+    failOnError  false
+    source = android.sourceSets.main.java.sourceFiles
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+    classpath += configurations.compile
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
 }
