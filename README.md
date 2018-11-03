@@ -1,6 +1,7 @@
 # SimpleSearchView
 [![API](https://img.shields.io/badge/API-16%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=16)
 [![Release](https://img.shields.io/github/release/Ferfalk/SimpleSearchView/all.svg?style=flat)](https://jitpack.io/#Ferfalk/SimpleSearchView)
+[![Android Arsenal](https://img.shields.io/badge/Android%20Arsenal-SimpleSearchView-brightgreen.svg?style=flat)](https://android-arsenal.com/details/1/7287)
 
 A simple SearchView for Android based on Material Design
 
