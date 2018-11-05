@@ -16,7 +16,16 @@ A simple SearchView for Android based on Material Design
 
 ## Download
 
-Gradle dependency:
+Add the JitPack repository to the build.gradle file:
+```groovy
+allprojects {
+    repositories {
+        ...
+        maven { url 'https://jitpack.io' }
+    }
+}
+```
+Add the Gradle dependency:
 ```groovy
 implementation 'com.github.Ferfalk:SimpleSearchView:0.1.3'
 ```
