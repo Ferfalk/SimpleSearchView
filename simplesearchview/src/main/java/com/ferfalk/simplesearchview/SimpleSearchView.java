@@ -92,6 +92,8 @@ public class SimpleSearchView extends FrameLayout {
     private OnQueryTextListener onQueryChangeListener;
     private SearchViewListener searchViewListener;
 
+    private boolean searchIsClosing = false;
+
     public SimpleSearchView(Context context) {
         this(context, null);
     }
@@ -209,7 +211,9 @@ public class SimpleSearchView extends FrameLayout {
         searchEditText.addTextChangedListener(new SimpleTextWatcher() {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                SimpleSearchView.this.onTextChanged(s);
+                if (!searchIsClosing) {
+                    SimpleSearchView.this.onTextChanged(s);
+                }
             }
         });
 
@@ -320,7 +324,9 @@ public class SimpleSearchView extends FrameLayout {
         if (submittedQuery != null && TextUtils.getTrimmedLength(submittedQuery) > 0) {
             if (onQueryChangeListener == null || !onQueryChangeListener.onQueryTextSubmit(submittedQuery.toString())) {
                 closeSearch();
+                searchIsClosing = true;
                 searchEditText.setText(null);
+                searchIsClosing = false;
             }
         }
     }
@@ -394,7 +400,9 @@ public class SimpleSearchView extends FrameLayout {
             return;
         }
 
+        searchIsClosing = true;
         searchEditText.setText(null);
+        searchIsClosing = false;
         clearFocus();
 
         if (animate) {
