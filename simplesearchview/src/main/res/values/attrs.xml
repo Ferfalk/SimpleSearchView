@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <declare-styleable name="SimpleSearchView">
-        <attr name="backIconAlpha" />
-        <attr name="iconsAlpha" />
+        <attr name="backIconAlpha" format="dimension" />
+        <attr name="iconsAlpha" format="dimension" />
 
         <attr name="backIconTint" format="color" />
         <attr name="iconsTint" format="color" />
