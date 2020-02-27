@@ -27,7 +27,7 @@ allprojects {
 ```
 Add the Gradle dependency:
 ```groovy
-implementation 'com.github.Ferfalk:SimpleSearchView:0.1.4'
+implementation 'com.github.Ferfalk:SimpleSearchView:0.1.5'
 ```
 
 
