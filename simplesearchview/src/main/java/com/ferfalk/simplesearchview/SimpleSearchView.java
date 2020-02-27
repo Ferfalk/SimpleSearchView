@@ -92,6 +92,9 @@ public class SimpleSearchView extends FrameLayout {
     private OnQueryTextListener onQueryChangeListener;
     private SearchViewListener searchViewListener;
 
+    private boolean searchIsClosing = false;
+    private boolean keepQuery = false;
+
     public SimpleSearchView(Context context) {
         this(context, null);
     }
@@ -209,7 +212,9 @@ public class SimpleSearchView extends FrameLayout {
         searchEditText.addTextChangedListener(new SimpleTextWatcher() {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                SimpleSearchView.this.onTextChanged(s);
+                if (!searchIsClosing) {
+                    SimpleSearchView.this.onTextChanged(s);
+                }
             }
         });
 
@@ -254,6 +259,7 @@ public class SimpleSearchView extends FrameLayout {
         savedState.query = query != null ? query.toString() : null;
         savedState.isSearchOpen = isSearchOpen;
         savedState.animationDuration = animationDuration;
+        savedState.keepQuery = keepQuery;
 
         return savedState;
     }
@@ -266,6 +272,11 @@ public class SimpleSearchView extends FrameLayout {
         }
 
         SavedState savedState = (SavedState) state;
+
+        query = savedState.query;
+        animationDuration = savedState.animationDuration;
+        voiceSearchPrompt = savedState.voiceSearchPrompt;
+        keepQuery = savedState.keepQuery;
 
         if (savedState.isSearchOpen) {
             showSearch(false);
@@ -320,7 +331,9 @@ public class SimpleSearchView extends FrameLayout {
         if (submittedQuery != null && TextUtils.getTrimmedLength(submittedQuery) > 0) {
             if (onQueryChangeListener == null || !onQueryChangeListener.onQueryTextSubmit(submittedQuery.toString())) {
                 closeSearch();
+                searchIsClosing = true;
                 searchEditText.setText(null);
+                searchIsClosing = false;
             }
         }
     }
@@ -332,6 +345,15 @@ public class SimpleSearchView extends FrameLayout {
         PackageManager pm = getContext().getPackageManager();
         List<ResolveInfo> activities = pm.queryIntentActivities(new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH), 0);
         return !activities.isEmpty();
+    }
+
+    /**
+     * Saves query value in EditText after close/open events
+     *
+     * @param keepQuery keeps query if true
+     */
+    public void setKeepQuery(boolean keepQuery) {
+        this.keepQuery = keepQuery;
     }
 
     /**
@@ -351,7 +373,7 @@ public class SimpleSearchView extends FrameLayout {
             return;
         }
 
-        searchEditText.setText(null);
+        searchEditText.setText(keepQuery ? query : null);
         searchEditText.requestFocus();
 
         if (animate) {
@@ -394,7 +416,9 @@ public class SimpleSearchView extends FrameLayout {
             return;
         }
 
+        searchIsClosing = true;
         searchEditText.setText(null);
+        searchIsClosing = false;
         clearFocus();
 
         if (animate) {
@@ -807,6 +831,7 @@ public class SimpleSearchView extends FrameLayout {
         boolean isSearchOpen;
         int animationDuration;
         String voiceSearchPrompt;
+        boolean keepQuery;
 
         SavedState(Parcelable superState) {
             super(superState);
@@ -818,6 +843,7 @@ public class SimpleSearchView extends FrameLayout {
             this.isSearchOpen = in.readInt() == 1;
             this.animationDuration = in.readInt();
             this.voiceSearchPrompt = in.readString();
+            this.keepQuery = in.readInt() == 1;
         }
 
         @Override
@@ -827,6 +853,7 @@ public class SimpleSearchView extends FrameLayout {
             out.writeInt(isSearchOpen ? 1 : 0);
             out.writeInt(animationDuration);
             out.writeString(voiceSearchPrompt);
+            out.writeInt(keepQuery ? 1 : 0);
         }
     }
 

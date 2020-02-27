@@ -1,6 +1,7 @@
 # SimpleSearchView
 [![API](https://img.shields.io/badge/API-16%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=16)
 [![Release](https://img.shields.io/github/release/Ferfalk/SimpleSearchView/all.svg?style=flat)](https://jitpack.io/#Ferfalk/SimpleSearchView)
+[![Android Arsenal](https://img.shields.io/badge/Android%20Arsenal-SimpleSearchView-brightgreen.svg?style=flat)](https://android-arsenal.com/details/1/7287)
 
 A simple SearchView for Android based on Material Design
 
@@ -15,9 +16,18 @@ A simple SearchView for Android based on Material Design
 
 ## Download
 
-Gradle dependency:
+Add the JitPack repository to the build.gradle file:
 ```groovy
-implementation 'com.github.Ferfalk:SimpleSearchView:0.1.2'
+allprojects {
+    repositories {
+        ...
+        maven { url 'https://jitpack.io' }
+    }
+}
+```
+Add the Gradle dependency:
+```groovy
+implementation 'com.github.Ferfalk:SimpleSearchView:0.1.4'
 ```
 
 
