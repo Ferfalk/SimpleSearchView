@@ -1,6 +1,6 @@
 package com.ferfalk.simplesearchview;
 
-import android.support.design.widget.TabLayout;
+import com.google.android.material.tabs.TabLayout;
 
 /**
  * @author Fernando A. H. Falkiewicz
