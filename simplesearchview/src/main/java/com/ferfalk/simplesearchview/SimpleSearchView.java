@@ -293,7 +293,7 @@ public class SimpleSearchView extends FrameLayout {
         }
 
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        if (voiceSearchPrompt != null && voiceSearchPrompt.isEmpty()) {
+        if (voiceSearchPrompt != null && !voiceSearchPrompt.isEmpty()) {
             intent.putExtra(RecognizerIntent.EXTRA_PROMPT, voiceSearchPrompt);
         }
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_WEB_SEARCH);
