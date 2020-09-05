@@ -25,11 +25,12 @@
             android:textColor="@color/default_textColor"
             android:textColorHint="@color/default_textColorHint"
             android:textSize="16sp"
-            app:layout_constraintEnd_toStartOf="@id/buttonClear"
-            app:layout_constraintStart_toEndOf="@id/buttonBack" />
+            app:layout_constraintEnd_toStartOf="@id/clearButton"
+            app:layout_constraintStart_toEndOf="@id/backButton"
+            android:autofillHints="" />
 
         <ImageButton
-            android:id="@+id/buttonBack"
+            android:id="@+id/backButton"
             style="@style/SearchViewIcon"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
@@ -40,7 +41,7 @@
             app:srcCompat="@drawable/ic_arrow_back_black_24dp" />
 
         <ImageButton
-            android:id="@+id/buttonVoice"
+            android:id="@+id/voiceButton"
             style="@style/SearchViewIcon"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
@@ -49,13 +50,13 @@
             app:srcCompat="@drawable/ic_voice_search_black_24dp" />
 
         <ImageButton
-            android:id="@+id/buttonClear"
+            android:id="@+id/clearButton"
             style="@style/SearchViewIcon"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:contentDescription="@string/action_clear_search"
             android:visibility="gone"
-            app:layout_constraintEnd_toStartOf="@id/buttonVoice"
+            app:layout_constraintEnd_toStartOf="@id/voiceButton"
             app:srcCompat="@drawable/ic_close_black_24dp"
             tools:visibility="visible" />
 

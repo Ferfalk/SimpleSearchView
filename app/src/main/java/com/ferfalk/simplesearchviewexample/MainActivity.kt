@@ -1,126 +1,121 @@
-package com.ferfalk.simplesearchviewexample;
+package com.ferfalk.simplesearchviewexample
 
-import android.content.Intent;
-import android.graphics.Point;
-import android.os.Bundle;
-import androidx.annotation.NonNull;
-import com.google.android.material.tabs.TabLayout;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentPagerAdapter;
-import androidx.viewpager.widget.ViewPager;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
+import android.content.Intent
+import android.os.Bundle
+import android.util.Log
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.FragmentPagerAdapter
+import com.ferfalk.simplesearchview.SimpleSearchView
+import com.ferfalk.simplesearchview.utils.DimensUtils.convertDpToPx
+import com.ferfalk.simplesearchviewexample.databinding.ActivityMainBinding
+import com.google.android.material.tabs.TabLayout
+import com.google.android.material.tabs.TabLayout.TabLayoutOnPageChangeListener
 
-import com.ferfalk.simplesearchview.SimpleSearchView;
-import com.ferfalk.simplesearchview.utils.DimensUtils;
+class MainActivity : AppCompatActivity() {
 
-public class MainActivity extends AppCompatActivity {
-    public static final int EXTRA_REVEAL_CENTER_PADDING = 40;
-    private SimpleSearchView searchView;
-    private TabLayout tabLayout;
+    private lateinit var binding: ActivityMainBinding
+    private val TAG = MainActivity::class.java.simpleName
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-        searchView = findViewById(R.id.searchView);
-        tabLayout = findViewById(R.id.tabLayout);
-
-        SectionsPagerAdapter sectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
-        ViewPager viewPager = findViewById(R.id.container);
-        viewPager.setAdapter(sectionsPagerAdapter);
-
-        viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
-        tabLayout.addOnTabSelectedListener(new TabLayout.ViewPagerOnTabSelectedListener(viewPager));
+        init()
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.main_menu, menu);
-
-        setupSearchView(menu);
-        return true;
+    private fun init() = with(binding) {
+        setSupportActionBar(toolbar)
+        container.adapter = SectionsPagerAdapter(supportFragmentManager)
+        container.addOnPageChangeListener(TabLayoutOnPageChangeListener(tabLayout))
+        tabLayout.addOnTabSelectedListener(TabLayout.ViewPagerOnTabSelectedListener(container))
     }
 
-    private void setupSearchView(Menu menu) {
-        MenuItem item = menu.findItem(R.id.action_search);
-        searchView.setMenuItem(item);
-        searchView.setTabLayout(tabLayout);
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        val inflater = menuInflater
+        inflater.inflate(R.menu.main_menu, menu)
+        setupSearchView(menu)
+        return true
+    }
+
+    private fun setupSearchView(menu: Menu) = with(binding) {
+        val item = menu.findItem(R.id.action_search)
+        searchView.setMenuItem(item)
+        searchView.setTabLayout(tabLayout)
+        searchView.setOnQueryTextListener(object : SimpleSearchView.OnQueryTextListener{
+            override fun onQueryTextChange(newText: String): Boolean {
+                Log.e(TAG, getString(R.string.changed, newText))
+                return false
+            }
+
+            override fun onQueryTextSubmit(query: String): Boolean {
+                Log.e(TAG, getString(R.string.submitted, query))
+                return false
+            }
+
+            override fun onQueryTextCleared(): Boolean {
+                Log.e(TAG, getString(R.string.cleared))
+                return false
+            }
+        })
 
         // Adding padding to the animation because of the hidden menu item
-        Point revealCenter = searchView.getRevealAnimationCenter();
-        revealCenter.x -= DimensUtils.convertDpToPx(EXTRA_REVEAL_CENTER_PADDING, this);
+        val revealCenter = searchView.revealAnimationCenter
+        revealCenter!!.x -= convertDpToPx(EXTRA_REVEAL_CENTER_PADDING, this@MainActivity)
     }
 
-    @Override
-    public void onBackPressed() {
+    override fun onBackPressed() = with(binding) {
         if (searchView.onBackPressed()) {
-            return;
+            return
         }
-
-        super.onBackPressed();
+        super.onBackPressed()
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (searchView.onActivityResult(requestCode, resultCode, data)) {
-            return;
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) = with(binding) {
+        if (searchView.onActivityResult(requestCode, resultCode, data!!)) {
+            return
         }
-
-        super.onActivityResult(requestCode, resultCode, data);
+        super.onActivityResult(requestCode, resultCode, data)
     }
 
-    public static class PlaceholderFragment extends Fragment {
-        private static final String ARG_SECTION_NUMBER = "section_number";
-
-        public PlaceholderFragment() {
-            // Empty
+    class PlaceholderFragment : Fragment() {
+        override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+            val rootView = inflater.inflate(R.layout.fragment_main, container, false)
+            val textView = rootView.findViewById<TextView>(R.id.section_label)
+            textView.text = getString(R.string.section_format, arguments!!.getInt(ARG_SECTION_NUMBER))
+            return rootView
         }
 
-        public static PlaceholderFragment newInstance(int sectionNumber) {
-            PlaceholderFragment fragment = new PlaceholderFragment();
-            Bundle args = new Bundle();
-            args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-            fragment.setArguments(args);
-            return fragment;
-        }
-
-        @Override
-        public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-            TextView textView = rootView.findViewById(R.id.section_label);
-            textView.setText(getString(R.string.section_format, getArguments().getInt(ARG_SECTION_NUMBER)));
-            return rootView;
+        companion object {
+            private const val ARG_SECTION_NUMBER = "section_number"
+            fun newInstance(sectionNumber: Int): PlaceholderFragment {
+                val fragment = PlaceholderFragment()
+                val args = Bundle()
+                args.putInt(ARG_SECTION_NUMBER, sectionNumber)
+                fragment.arguments = args
+                return fragment
+            }
         }
     }
 
-    public class SectionsPagerAdapter extends FragmentPagerAdapter {
-
-        SectionsPagerAdapter(FragmentManager fm) {
-            super(fm);
+    class SectionsPagerAdapter internal constructor(fm: FragmentManager) : FragmentPagerAdapter(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
+        override fun getItem(position: Int): Fragment {
+            return PlaceholderFragment.newInstance(position + 1)
         }
 
-        @Override
-        public Fragment getItem(int position) {
-            return PlaceholderFragment.newInstance(position + 1);
+        override fun getCount(): Int {
+            return 3
         }
+    }
 
-        @Override
-        public int getCount() {
-            return 3;
-        }
+    companion object {
+        const val EXTRA_REVEAL_CENTER_PADDING = 40
     }
 }

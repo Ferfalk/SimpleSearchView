@@ -1,23 +1,21 @@
-package com.ferfalk.simplesearchview;
+package com.ferfalk.simplesearchview
 
-import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.tabs.TabLayout
+import com.google.android.material.tabs.TabLayout.OnTabSelectedListener
 
 /**
  * @author Fernando A. H. Falkiewicz
  */
-public abstract class SimpleOnTabSelectedListener implements TabLayout.OnTabSelectedListener {
-    @Override
-    public void onTabSelected(TabLayout.Tab tab) {
+abstract class SimpleOnTabSelectedListener : OnTabSelectedListener {
+    override fun onTabSelected(tab: TabLayout.Tab) {
         // No action
     }
 
-    @Override
-    public void onTabUnselected(TabLayout.Tab tab) {
+    override fun onTabUnselected(tab: TabLayout.Tab) {
         // No action
     }
 
-    @Override
-    public void onTabReselected(TabLayout.Tab tab) {
+    override fun onTabReselected(tab: TabLayout.Tab) {
         // No action
     }
 }

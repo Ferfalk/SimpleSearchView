@@ -1,26 +1,24 @@
-package com.ferfalk.simplesearchview;
+package com.ferfalk.simplesearchview
+
+import com.ferfalk.simplesearchview.SimpleSearchView.SearchViewListener
 
 /**
  * @author Fernando A. H. Falkiewicz
  */
-public abstract class SimpleSearchViewListener implements SimpleSearchView.SearchViewListener {
-    @Override
-    public void onSearchViewShown() {
+abstract class SimpleSearchViewListener : SearchViewListener {
+    override fun onSearchViewShown() {
         // No action
     }
 
-    @Override
-    public void onSearchViewClosed() {
+    override fun onSearchViewClosed() {
         // No action
     }
 
-    @Override
-    public void onSearchViewShownAnimation() {
+    override fun onSearchViewShownAnimation() {
         // No action
     }
 
-    @Override
-    public void onSearchViewClosedAnimation() {
+    override fun onSearchViewClosedAnimation() {
         // No action
     }
 }

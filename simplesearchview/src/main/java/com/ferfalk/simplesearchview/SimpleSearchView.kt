@@ -1,524 +1,392 @@
-package com.ferfalk.simplesearchview;
+package com.ferfalk.simplesearchview
 
-import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.content.res.ColorStateList;
-import android.content.res.TypedArray;
-import android.graphics.Color;
-import android.graphics.Point;
-import android.graphics.Rect;
-import android.graphics.drawable.Drawable;
-import android.graphics.drawable.GradientDrawable;
-import android.os.Build;
-import android.os.Parcel;
-import android.os.Parcelable;
-import android.speech.RecognizerIntent;
-import androidx.annotation.ColorInt;
-import androidx.annotation.DrawableRes;
-import androidx.annotation.IntDef;
-import androidx.annotation.NonNull;
-import com.google.android.material.tabs.TabLayout;
-import androidx.core.widget.ImageViewCompat;
-import android.text.TextUtils;
-import android.util.AttributeSet;
-import android.view.LayoutInflater;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
-import android.view.inputmethod.EditorInfo;
-import android.widget.EditText;
-import android.widget.FrameLayout;
-import android.widget.ImageButton;
-
-import com.ferfalk.simplesearchview.utils.ContextUtils;
-import com.ferfalk.simplesearchview.utils.DimensUtils;
-import com.ferfalk.simplesearchview.utils.EditTextReflectionUtils;
-import com.ferfalk.simplesearchview.utils.SimpleAnimationListener;
-import com.ferfalk.simplesearchview.utils.SimpleAnimationUtils;
-
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.util.ArrayList;
-import java.util.List;
-
-import static android.app.Activity.RESULT_OK;
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import android.content.res.ColorStateList
+import android.graphics.Color
+import android.graphics.Point
+import android.graphics.Rect
+import android.graphics.drawable.Drawable
+import android.graphics.drawable.GradientDrawable
+import android.os.Build
+import android.os.Parcel
+import android.os.Parcelable
+import android.speech.RecognizerIntent
+import android.text.TextUtils
+import android.util.AttributeSet
+import android.util.Log
+import android.view.*
+import android.view.View.OnFocusChangeListener
+import android.view.inputmethod.EditorInfo
+import android.widget.FrameLayout
+import android.widget.TextView
+import androidx.annotation.ColorInt
+import androidx.annotation.DrawableRes
+import androidx.annotation.IntDef
+import androidx.core.content.ContextCompat
+import androidx.core.widget.ImageViewCompat
+import com.ferfalk.simplesearchview.databinding.SearchViewBinding
+import com.ferfalk.simplesearchview.utils.ContextUtils.getAccentColor
+import com.ferfalk.simplesearchview.utils.ContextUtils.getPrimaryColor
+import com.ferfalk.simplesearchview.utils.ContextUtils.hideKeyboard
+import com.ferfalk.simplesearchview.utils.ContextUtils.scanForActivity
+import com.ferfalk.simplesearchview.utils.ContextUtils.showKeyboard
+import com.ferfalk.simplesearchview.utils.DimensUtils.convertDpToPx
+import com.ferfalk.simplesearchview.utils.EditTextReflectionUtils.setCursorColor
+import com.ferfalk.simplesearchview.utils.EditTextReflectionUtils.setCursorDrawable
+import com.ferfalk.simplesearchview.utils.SimpleAnimationListener
+import com.ferfalk.simplesearchview.utils.SimpleAnimationUtils
+import com.ferfalk.simplesearchview.utils.SimpleAnimationUtils.hideOrFadeOut
+import com.ferfalk.simplesearchview.utils.SimpleAnimationUtils.revealOrFadeIn
+import com.ferfalk.simplesearchview.utils.SimpleAnimationUtils.verticalSlideView
+import com.google.android.material.tabs.TabLayout
 
 /**
  * @author Fernando A. H. Falkiewicz
  */
-public class SimpleSearchView extends FrameLayout {
-    public static final int REQUEST_VOICE_SEARCH = 735;
-    public static final int CARD_CORNER_RADIUS = 4;
-    public static final int ANIMATION_CENTER_PADDING = 26;
-    private static final int CARD_PADDING = 6;
-    private static final int CARD_ELEVATION = 2;
-    private static final float BACK_ICON_ALPHA_DEFAULT = 0.87f;
-    private static final float ICONS_ALPHA_DEFAULT = 0.54f;
+class SimpleSearchView @JvmOverloads constructor(creationContext: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) : FrameLayout(creationContext, attrs, defStyleAttr) {
+    @IntDef(STYLE_BAR, STYLE_CARD)
+    @kotlin.annotation.Retention(AnnotationRetention.SOURCE)
+    annotation class Style
 
-    public static final int STYLE_BAR = 0;
-    public static final int STYLE_CARD = 1;
+    /**
+     * @param animationDuration duration, in ms, of the reveal or fade animations
+     * @return current reveal or fade animations duration
+     */
+    var animationDuration = SimpleAnimationUtils.ANIMATION_DURATION_DEFAULT
 
-    @IntDef({STYLE_BAR, STYLE_CARD})
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface Style {
-    }
+    /**
+     * @param revealAnimationCenter center of the reveal animation, used to customize the origin of the animation
+     * @return center of the reveal animation, by default it is placed where the rightmost MenuItem would be
+     */
+    var revealAnimationCenter: Point? = null
+        get() {
+            if (field != null) {
+                return field
+            }
 
-    private Context context;
-    private int animationDuration = SimpleAnimationUtils.ANIMATION_DURATION_DEFAULT;
-    private Point revealAnimationCenter;
-    private CharSequence query;
-    private CharSequence oldQuery;
-    private boolean allowVoiceSearch = false;
-    private boolean isSearchOpen = false;
-    private boolean isClearingFocus = false;
-    private String voiceSearchPrompt = "";
+            val centerX = width - convertDpToPx(ANIMATION_CENTER_PADDING, context)
+            val centerY = height / 2
+
+            field = Point(centerX, centerY)
+            return field
+        }
+    private var query: CharSequence? = null
+    private var oldQuery: CharSequence? = null
+    private var allowVoiceSearch = false
+    var isSearchOpen = false
+        private set
+    private var isClearingFocus = false
+    private var voiceSearchPrompt: String? = ""
+
     @Style
-    private int style = STYLE_BAR;
+    private var style = STYLE_BAR
 
-    private ViewGroup searchContainer;
-    private EditText searchEditText;
-    private ImageButton backButton;
-    private ImageButton clearButton;
-    private ImageButton voiceButton;
-    private View bottomLine;
+    /**
+     * @return the TabLayout attached to the SimpleSearchView behavior
+     */
+    var tabLayout: TabLayout? = null
+        private set
+    private var tabLayoutInitialHeight = 0
+    private var onQueryChangeListener: OnQueryTextListener? = null
+    private var searchViewListener: SearchViewListener? = null
+    private var searchIsClosing = false
+    private var keepQuery = false
 
-    private TabLayout tabLayout;
-    private int tabLayoutInitialHeight;
+    private val binding = SearchViewBinding.inflate(LayoutInflater.from(context), this, true)
 
-    private OnQueryTextListener onQueryChangeListener;
-    private SearchViewListener searchViewListener;
-
-    private boolean searchIsClosing = false;
-    private boolean keepQuery = false;
-
-    public SimpleSearchView(Context context) {
-        this(context, null);
-    }
-
-    public SimpleSearchView(Context context, AttributeSet attrs) {
-        this(context, attrs, 0);
-    }
-
-    public SimpleSearchView(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-        this.context = context;
-
-        inflate();
-        initStyle(attrs, defStyleAttr);
-        initSearchEditText();
-        initClickListeners();
-        showVoice(true);
-
-        if (!isInEditMode()) {
-            setVisibility(View.INVISIBLE);
-        }
-    }
-
-    private void inflate() {
-        LayoutInflater.from(context).inflate(R.layout.search_view, this, true);
-
-        searchContainer = findViewById(R.id.searchContainer);
-        searchEditText = findViewById(R.id.searchEditText);
-        backButton = findViewById(R.id.buttonBack);
-        clearButton = findViewById(R.id.buttonClear);
-        voiceButton = findViewById(R.id.buttonVoice);
-        bottomLine = findViewById(R.id.bottomLine);
-    }
-
-    private void initStyle(AttributeSet attrs, int defStyleAttr) {
-        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.SimpleSearchView, defStyleAttr, 0);
-        if (typedArray == null) {
-            setCardStyle(style);
-            return;
-        }
-
+    private fun initStyle(attrs: AttributeSet?, defStyleAttr: Int) {
+        val typedArray = context.obtainStyledAttributes(attrs, R.styleable.SimpleSearchView, defStyleAttr, 0)
         if (typedArray.hasValue(R.styleable.SimpleSearchView_type)) {
-            setCardStyle(typedArray.getInt(R.styleable.SimpleSearchView_type, style));
+            cardStyle = typedArray.getInt(R.styleable.SimpleSearchView_type, style)
         }
-
         if (typedArray.hasValue(R.styleable.SimpleSearchView_backIconAlpha)) {
-            setBackIconAlpha(typedArray.getFloat(R.styleable.SimpleSearchView_backIconAlpha, BACK_ICON_ALPHA_DEFAULT));
+            setBackIconAlpha(typedArray.getFloat(R.styleable.SimpleSearchView_backIconAlpha, BACK_ICON_ALPHA_DEFAULT))
         }
-
         if (typedArray.hasValue(R.styleable.SimpleSearchView_iconsAlpha)) {
-            setIconsAlpha(typedArray.getFloat(R.styleable.SimpleSearchView_iconsAlpha, ICONS_ALPHA_DEFAULT));
+            setIconsAlpha(typedArray.getFloat(R.styleable.SimpleSearchView_iconsAlpha, ICONS_ALPHA_DEFAULT))
         }
-
         if (typedArray.hasValue(R.styleable.SimpleSearchView_backIconTint)) {
-            setBackIconColor(typedArray.getColor(R.styleable.SimpleSearchView_backIconTint, ContextUtils.getPrimaryColor(context)));
+            setBackIconColor(typedArray.getColor(R.styleable.SimpleSearchView_backIconTint, getPrimaryColor(context)))
         }
-
         if (typedArray.hasValue(R.styleable.SimpleSearchView_iconsTint)) {
-            setIconsColor(typedArray.getColor(R.styleable.SimpleSearchView_iconsTint, Color.BLACK));
+            setIconsColor(typedArray.getColor(R.styleable.SimpleSearchView_iconsTint, Color.BLACK))
         }
-
         if (typedArray.hasValue(R.styleable.SimpleSearchView_cursorColor)) {
-            setCursorColor(typedArray.getColor(R.styleable.SimpleSearchView_cursorColor, ContextUtils.getAccentColor(context)));
+            setCursorColor(typedArray.getColor(R.styleable.SimpleSearchView_cursorColor, getAccentColor(context)))
         }
-
         if (typedArray.hasValue(R.styleable.SimpleSearchView_hintColor)) {
-            setHintTextColor(typedArray.getColor(R.styleable.SimpleSearchView_hintColor, getResources().getColor(R.color.default_textColorHint)));
+            setHintTextColor(typedArray.getColor(R.styleable.SimpleSearchView_hintColor, ContextCompat.getColor(context, R.color.default_textColorHint)))
         }
-
         if (typedArray.hasValue(R.styleable.SimpleSearchView_searchBackground)) {
-            setSearchBackground(typedArray.getDrawable(R.styleable.SimpleSearchView_searchBackground));
+            setSearchBackground(typedArray.getDrawable(R.styleable.SimpleSearchView_searchBackground))
         }
-
         if (typedArray.hasValue(R.styleable.SimpleSearchView_searchBackIcon)) {
-            setBackIconDrawable(typedArray.getDrawable(R.styleable.SimpleSearchView_searchBackIcon));
+            setBackIconDrawable(typedArray.getDrawable(R.styleable.SimpleSearchView_searchBackIcon))
         }
-
         if (typedArray.hasValue(R.styleable.SimpleSearchView_searchClearIcon)) {
-            setClearIconDrawable(typedArray.getDrawable(R.styleable.SimpleSearchView_searchClearIcon));
+            setClearIconDrawable(typedArray.getDrawable(R.styleable.SimpleSearchView_searchClearIcon))
         }
-
         if (typedArray.hasValue(R.styleable.SimpleSearchView_searchVoiceIcon)) {
-            setVoiceIconDrawable(typedArray.getDrawable(R.styleable.SimpleSearchView_searchVoiceIcon));
+            setVoiceIconDrawable(typedArray.getDrawable(R.styleable.SimpleSearchView_searchVoiceIcon))
         }
-
         if (typedArray.hasValue(R.styleable.SimpleSearchView_voiceSearch)) {
-            enableVoiceSearch(typedArray.getBoolean(R.styleable.SimpleSearchView_voiceSearch, allowVoiceSearch));
+            enableVoiceSearch(typedArray.getBoolean(R.styleable.SimpleSearchView_voiceSearch, allowVoiceSearch))
         }
-
         if (typedArray.hasValue(R.styleable.SimpleSearchView_voiceSearchPrompt)) {
-            setVoiceSearchPrompt(typedArray.getString(R.styleable.SimpleSearchView_voiceSearchPrompt));
+            setVoiceSearchPrompt(typedArray.getString(R.styleable.SimpleSearchView_voiceSearchPrompt))
         }
-
         if (typedArray.hasValue(R.styleable.SimpleSearchView_android_hint)) {
-            setHint(typedArray.getString(R.styleable.SimpleSearchView_android_hint));
+            setHint(typedArray.getString(R.styleable.SimpleSearchView_android_hint))
         }
-
         if (typedArray.hasValue(R.styleable.SimpleSearchView_android_inputType)) {
-            setInputType(typedArray.getInt(R.styleable.SimpleSearchView_android_inputType, EditorInfo.TYPE_TEXT_FLAG_NO_SUGGESTIONS));
+            setInputType(typedArray.getInt(R.styleable.SimpleSearchView_android_inputType, EditorInfo.TYPE_TEXT_FLAG_NO_SUGGESTIONS))
         }
-
         if (typedArray.hasValue(R.styleable.SimpleSearchView_android_textColor)) {
-            setTextColor(typedArray.getColor(R.styleable.SimpleSearchView_android_textColor, getResources().getColor(R.color.default_textColor)));
+            setTextColor(typedArray.getColor(R.styleable.SimpleSearchView_android_textColor, ContextCompat.getColor(context, R.color.default_textColor)))
         }
-
-        typedArray.recycle();
+        typedArray.recycle()
     }
 
-    private void initSearchEditText() {
-        searchEditText.setOnEditorActionListener((v, actionId, event) -> {
-            onSubmitQuery();
-            return true;
-        });
-
-        searchEditText.addTextChangedListener(new SimpleTextWatcher() {
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
+    private fun initSearchEditText() = with(binding) {
+        searchEditText.setOnEditorActionListener { _: TextView?, _: Int, _: KeyEvent? ->
+            onSubmitQuery()
+            true
+        }
+        searchEditText.addTextChangedListener(object : SimpleTextWatcher() {
+            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
                 if (!searchIsClosing) {
-                    SimpleSearchView.this.onTextChanged(s);
+                    this@SimpleSearchView.onTextChanged(s)
                 }
             }
-        });
-
-        searchEditText.setOnFocusChangeListener((v, hasFocus) -> {
+        })
+        searchEditText.onFocusChangeListener = OnFocusChangeListener { _: View?, hasFocus: Boolean ->
             if (hasFocus) {
-                ContextUtils.showKeyboard(searchEditText);
+                showKeyboard(searchEditText)
             }
-        });
+        }
     }
 
-    private void initClickListeners() {
-        backButton.setOnClickListener(v -> closeSearch());
-        clearButton.setOnClickListener(v -> clearSearch());
-        voiceButton.setOnClickListener(v -> voiceSearch());
+    private fun initClickListeners() = with(binding) {
+        backButton.setOnClickListener { closeSearch() }
+        clearButton.setOnClickListener { clearSearch() }
+        voiceButton.setOnClickListener { voiceSearch() }
     }
 
-    @Override
-    public void clearFocus() {
-        isClearingFocus = true;
-        ContextUtils.hideKeyboard(this);
-        super.clearFocus();
-        searchEditText.clearFocus();
-        isClearingFocus = false;
+    override fun clearFocus() = with(binding) {
+        isClearingFocus = true
+        hideKeyboard(this@SimpleSearchView)
+        super.clearFocus()
+        searchEditText.clearFocus()
+        isClearingFocus = false
     }
 
-    @Override
-    public boolean requestFocus(int direction, Rect previouslyFocusedRect) {
+    override fun requestFocus(direction: Int, previouslyFocusedRect: Rect?): Boolean = with(binding) {
         if (isClearingFocus) {
-            return false;
+            return false
         }
-        if (!isFocusable()) {
-            return false;
-        }
-        return searchEditText.requestFocus(direction, previouslyFocusedRect);
+        return if (!isFocusable) {
+            false
+        } else searchEditText.requestFocus(direction, previouslyFocusedRect)
     }
 
-    @Override
-    public Parcelable onSaveInstanceState() {
-        Parcelable superState = super.onSaveInstanceState();
-
-        SavedState savedState = new SavedState(superState);
-        savedState.query = query != null ? query.toString() : null;
-        savedState.isSearchOpen = isSearchOpen;
-        savedState.animationDuration = animationDuration;
-        savedState.keepQuery = keepQuery;
-
-        return savedState;
+    public override fun onSaveInstanceState(): Parcelable {
+        val superState = super.onSaveInstanceState()
+        val savedState = SavedState(superState)
+        savedState.query = if (query != null) query.toString() else null
+        savedState.isSearchOpen = isSearchOpen
+        savedState.animationDuration = animationDuration
+        savedState.keepQuery = keepQuery
+        return savedState
     }
 
-    @Override
-    public void onRestoreInstanceState(Parcelable state) {
-        if (!(state instanceof SavedState)) {
-            super.onRestoreInstanceState(state);
-            return;
+    public override fun onRestoreInstanceState(state: Parcelable) {
+        if (state !is SavedState) {
+            super.onRestoreInstanceState(state)
+            return
         }
-
-        SavedState savedState = (SavedState) state;
-
-        query = savedState.query;
-        animationDuration = savedState.animationDuration;
-        voiceSearchPrompt = savedState.voiceSearchPrompt;
-        keepQuery = savedState.keepQuery;
-
-        if (savedState.isSearchOpen) {
-            showSearch(false);
-            setQuery(savedState.query, false);
+        query = state.query
+        animationDuration = state.animationDuration
+        voiceSearchPrompt = state.voiceSearchPrompt
+        keepQuery = state.keepQuery
+        if (state.isSearchOpen) {
+            showSearch(false)
+            setQuery(state.query, false)
         }
-
-        super.onRestoreInstanceState(savedState.getSuperState());
+        super.onRestoreInstanceState(state.superState)
     }
 
-    private void voiceSearch() {
-        Activity activity = ContextUtils.scanForActivity(context);
-        if (activity == null) {
-            return;
+    private fun voiceSearch() {
+        val activity = scanForActivity(context) ?: return
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+        if (!voiceSearchPrompt.isNullOrEmpty()) {
+            intent.putExtra(RecognizerIntent.EXTRA_PROMPT, voiceSearchPrompt)
         }
-
-        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        if (voiceSearchPrompt != null && !voiceSearchPrompt.isEmpty()) {
-            intent.putExtra(RecognizerIntent.EXTRA_PROMPT, voiceSearchPrompt);
-        }
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_WEB_SEARCH);
-        intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
-
-        activity.startActivityForResult(intent, REQUEST_VOICE_SEARCH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_WEB_SEARCH)
+        intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
+        activity.startActivityForResult(intent, REQUEST_VOICE_SEARCH)
     }
 
-    private void clearSearch() {
-        searchEditText.setText(null);
-        if (onQueryChangeListener != null) {
-            onQueryChangeListener.onQueryTextCleared();
-        }
+    private fun clearSearch() = with(binding) {
+        searchEditText.text = null
+        onQueryChangeListener?.onQueryTextCleared()
     }
 
-    private void onTextChanged(CharSequence newText) {
-        query = newText;
-        boolean hasText = !TextUtils.isEmpty(newText);
+    private fun onTextChanged(newText: CharSequence) = with(binding) {
+        query = newText
+        val hasText = !TextUtils.isEmpty(newText)
         if (hasText) {
-            clearButton.setVisibility(VISIBLE);
-            showVoice(false);
+            clearButton.visibility = VISIBLE
+            showVoice(false)
         } else {
-            clearButton.setVisibility(GONE);
-            showVoice(true);
+            clearButton.visibility = GONE
+            showVoice(true)
         }
-
-        if (onQueryChangeListener != null && !TextUtils.equals(newText, oldQuery)) {
-            onQueryChangeListener.onQueryTextChange(newText.toString());
+        if (!TextUtils.equals(newText, oldQuery)) {
+            onQueryChangeListener?.onQueryTextChange(newText.toString())
         }
-        oldQuery = newText.toString();
+        oldQuery = newText.toString()
     }
 
-    private void onSubmitQuery() {
-        CharSequence submittedQuery = searchEditText.getText();
+    private fun onSubmitQuery() = with(binding) {
+        val submittedQuery: CharSequence? = searchEditText.text
         if (submittedQuery != null && TextUtils.getTrimmedLength(submittedQuery) > 0) {
-            if (onQueryChangeListener == null || !onQueryChangeListener.onQueryTextSubmit(submittedQuery.toString())) {
-                closeSearch();
-                searchIsClosing = true;
-                searchEditText.setText(null);
-                searchIsClosing = false;
+            if(onQueryChangeListener == null || !onQueryChangeListener!!.onQueryTextSubmit(submittedQuery.toString())) {
+                closeSearch()
+                searchIsClosing = true
+                searchEditText.text = null
+                searchIsClosing = false
             }
         }
     }
 
-    private boolean isVoiceAvailable() {
-        if (isInEditMode()) {
-            return true;
+    private val isVoiceAvailable: Boolean
+        get() {
+            if (isInEditMode) {
+                return true
+            }
+            val pm = context.packageManager
+            val activities = pm.queryIntentActivities(Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH), 0)
+            return activities.isNotEmpty()
         }
-        PackageManager pm = getContext().getPackageManager();
-        List<ResolveInfo> activities = pm.queryIntentActivities(new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH), 0);
-        return !activities.isEmpty();
-    }
 
     /**
      * Saves query value in EditText after close/open events
      *
      * @param keepQuery keeps query if true
      */
-    public void setKeepQuery(boolean keepQuery) {
-        this.keepQuery = keepQuery;
+    fun setKeepQuery(keepQuery: Boolean) {
+        this.keepQuery = keepQuery
     }
 
     /**
      * Shows search with animation
-     */
-    public void showSearch() {
-        showSearch(true);
-    }
-
-    /**
-     * Shows search
-     *
      * @param animate true to animate
      */
-    public void showSearch(boolean animate) {
-        if (isSearchOpen()) {
-            return;
+    @JvmOverloads
+    fun showSearch(animate: Boolean = true) = with(binding) {
+        if (isSearchOpen) {
+            return null
         }
-
-        searchEditText.setText(keepQuery ? query : null);
-        searchEditText.requestFocus();
-
+        searchEditText.setText(if (keepQuery) query else null)
+        searchEditText.requestFocus()
         if (animate) {
-            SimpleAnimationUtils.AnimationListener animationListener = new SimpleAnimationListener() {
-                @Override
-                public boolean onAnimationEnd(@NonNull View view) {
-                    if (searchViewListener != null) {
-                        searchViewListener.onSearchViewShownAnimation();
-                    }
-                    return false;
+            val animationListener: SimpleAnimationUtils.AnimationListener = object : SimpleAnimationListener() {
+                override fun onAnimationEnd(view: View): Boolean {
+                    searchViewListener?.onSearchViewShownAnimation()
+                    return false
                 }
-            };
-            SimpleAnimationUtils.revealOrFadeIn(this, animationDuration, animationListener, getRevealAnimationCenter()).start();
+            }
+            revealOrFadeIn(this@SimpleSearchView, animationDuration, animationListener, revealAnimationCenter).start()
         } else {
-            setVisibility(View.VISIBLE);
+            visibility = VISIBLE
         }
-
-        hideTabLayout(animate);
-
-        isSearchOpen = true;
-        if (searchViewListener != null) {
-            searchViewListener.onSearchViewShown();
-        }
+        hideTabLayout(animate)
+        isSearchOpen = true
+        searchViewListener?.onSearchViewShown()
     }
 
     /**
      * Closes search with animation
-     */
-    public void closeSearch() {
-        closeSearch(true);
-    }
-
-    /**
-     * Closes search
      *
      * @param animate true if should be animated
      */
-    public void closeSearch(boolean animate) {
-        if (!isSearchOpen()) {
-            return;
+    @JvmOverloads
+    fun closeSearch(animate: Boolean = true) = with(binding) {
+        if (!isSearchOpen) {
+            return null
         }
-
-        searchIsClosing = true;
-        searchEditText.setText(null);
-        searchIsClosing = false;
-        clearFocus();
-
+        searchIsClosing = true
+        searchEditText.text = null
+        searchIsClosing = false
+        clearFocus()
         if (animate) {
-            SimpleAnimationUtils.AnimationListener animationListener = new SimpleAnimationListener() {
-                @Override
-                public boolean onAnimationEnd(@NonNull View view) {
-                    if (searchViewListener != null) {
-                        searchViewListener.onSearchViewClosedAnimation();
-                    }
-                    return false;
+            val animationListener: SimpleAnimationUtils.AnimationListener = object : SimpleAnimationListener() {
+                override fun onAnimationEnd(view: View): Boolean {
+                    searchViewListener?.onSearchViewClosedAnimation()
+                    return false
                 }
-            };
-            SimpleAnimationUtils.hideOrFadeOut(this, animationDuration, animationListener, getRevealAnimationCenter()).start();
+            }
+            hideOrFadeOut(this@SimpleSearchView, animationDuration, animationListener, revealAnimationCenter).start()
         } else {
-            setVisibility(View.INVISIBLE);
+            visibility = INVISIBLE
         }
-
-        showTabLayout(animate);
-
-        isSearchOpen = false;
-        if (searchViewListener != null) {
-            searchViewListener.onSearchViewClosed();
-        }
-    }
-
-    /**
-     * @return the TabLayout attached to the SimpleSearchView behavior
-     */
-    public TabLayout getTabLayout() {
-        return tabLayout;
+        showTabLayout(animate)
+        isSearchOpen = false
+        searchViewListener?.onSearchViewClosed()
     }
 
     /**
      * Sets a TabLayout that is automatically hidden when the search opens, and shown when the search closes
      */
-    public void setTabLayout(TabLayout tabLayout) {
-        this.tabLayout = tabLayout;
-
-        this.tabLayout.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
-            @Override
-            public boolean onPreDraw() {
-                tabLayoutInitialHeight = tabLayout.getHeight();
-                tabLayout.getViewTreeObserver().removeOnPreDrawListener(this);
-                return true;
+    fun setTabLayout(tabLayout: TabLayout) {
+        this.tabLayout = tabLayout
+        this.tabLayout!!.viewTreeObserver.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
+            override fun onPreDraw(): Boolean {
+                tabLayoutInitialHeight = tabLayout.height
+                tabLayout.viewTreeObserver.removeOnPreDrawListener(this)
+                return true
             }
-        });
-
-        this.tabLayout.addOnTabSelectedListener(new SimpleOnTabSelectedListener() {
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
-                closeSearch();
+        })
+        this.tabLayout!!.addOnTabSelectedListener(object : SimpleOnTabSelectedListener() {
+            override fun onTabUnselected(tab: TabLayout.Tab) {
+                closeSearch()
             }
-        });
+        })
     }
-
     /**
      * Shows the attached TabLayout with animation
-     */
-    public void showTabLayout() {
-        showTabLayout(true);
-    }
-
-    /**
-     * Shows the attached TabLayout
      *
      * @param animate true if should be animated
      */
-    public void showTabLayout(boolean animate) {
+    @JvmOverloads
+    fun showTabLayout(animate: Boolean = true) {
         if (tabLayout == null) {
-            return;
+            return
         }
 
         if (animate) {
-            SimpleAnimationUtils.verticalSlideView(tabLayout, 0, tabLayoutInitialHeight, animationDuration).start();
+            verticalSlideView(tabLayout!!, 0, tabLayoutInitialHeight, animationDuration).start()
         } else {
-            tabLayout.setVisibility(View.VISIBLE);
+            tabLayout?.visibility = VISIBLE
         }
     }
-
     /**
      * Hides the attached TabLayout with animation
-     */
-    public void hideTabLayout() {
-        hideTabLayout(true);
-    }
-
-    /**
-     * Hides the attached TabLayout
      *
      * @param animate true if should be animated
      */
-    public void hideTabLayout(boolean animate) {
+    @JvmOverloads
+    fun hideTabLayout(animate: Boolean = true) {
         if (tabLayout == null) {
-            return;
+            return
         }
 
         if (animate) {
-            SimpleAnimationUtils.verticalSlideView(tabLayout, tabLayout.getHeight(), 0, animationDuration).start();
+            verticalSlideView(tabLayout!!, tabLayout!!.height, 0, animationDuration).start()
         } else {
-            tabLayout.setVisibility(View.GONE);
+            tabLayout!!.visibility = GONE
         }
     }
 
@@ -529,52 +397,37 @@ public class SimpleSearchView extends FrameLayout {
      *
      * @return true if acted, false if not acted
      */
-    public boolean onBackPressed() {
-        if (isSearchOpen()) {
-            closeSearch();
-            return true;
+    fun onBackPressed(): Boolean {
+        if (isSearchOpen) {
+            closeSearch()
+            return true
         }
-        return false;
+        return false
     }
 
     /**
      * Call this method on the onActivityResult method of the activity.
-     * <p>
-     * Returns true if it was a voice search result and submits it.
-     * Returns false if it was not a voice search result.
      *
-     * @return true if acted, false if not acted
-     */
-    public boolean onActivityResult(int requestCode, int resultCode, Intent data) {
-        return onActivityResult(requestCode, resultCode, data, true);
-    }
-
-    /**
-     * Call this method on the onActivityResult method of the activity.
-     * <p>
-     * Returns true if it was a voice search result and sets it to the search query.
+     *
+     * Returns true if it was a voice search result and submits it.
      * Returns false if it was not a voice search result.
      *
      * @param submit true if it should submit automatically.
      * @return true if acted, false if not acted
      */
-    public boolean onActivityResult(int requestCode, int resultCode, Intent data, boolean submit) {
-        if (requestCode == REQUEST_VOICE_SEARCH && resultCode == RESULT_OK) {
-            ArrayList<String> matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-            if (matches != null && !matches.isEmpty()) {
-                String searchWrd = matches.get(0);
+    @JvmOverloads
+    fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent, submit: Boolean = true): Boolean {
+        if (requestCode == REQUEST_VOICE_SEARCH && resultCode == Activity.RESULT_OK) {
+            val matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+            if (!matches.isNullOrEmpty()) {
+                val searchWrd = matches[0]
                 if (!TextUtils.isEmpty(searchWrd)) {
-                    setQuery(searchWrd, submit);
+                    setQuery(searchWrd, submit)
                 }
             }
-            return true;
+            return true
         }
-        return false;
-    }
-
-    @Style
-    public int getCardStyle() {
-        return style;
+        return false
     }
 
     /**
@@ -582,150 +435,144 @@ public class SimpleSearchView extends FrameLayout {
      *
      * @param style STYLE_CARD or STYLE_BAR
      */
-    public void setCardStyle(@Style int style) {
-        this.style = style;
-
-        LayoutParams layoutParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
-        float elevation = 0;
-
-        switch (style) {
-            case STYLE_CARD:
-                searchContainer.setBackground(getCardStyleBackground());
-                bottomLine.setVisibility(View.GONE);
-
-                int cardPadding = DimensUtils.convertDpToPx(CARD_PADDING, context);
-                layoutParams.setMargins(cardPadding, cardPadding, cardPadding, cardPadding);
-
-                elevation = DimensUtils.convertDpToPx(CARD_ELEVATION, context);
-                break;
-            case STYLE_BAR:
-            default:
-                searchContainer.setBackgroundColor(Color.WHITE);
-                bottomLine.setVisibility(View.VISIBLE);
-                break;
+    @get:Style
+    var cardStyle: Int
+        get() = style
+        set(value) = with(binding) {
+            style = value
+            val layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
+            var elevation = 0f
+            when (value) {
+                STYLE_CARD -> {
+                    searchContainer.background = cardStyleBackground
+                    bottomLine.visibility = GONE
+                    val cardPadding = convertDpToPx(CARD_PADDING, context)
+                    layoutParams.setMargins(cardPadding, cardPadding, cardPadding, cardPadding)
+                    elevation = convertDpToPx(CARD_ELEVATION, context).toFloat()
+                }
+                STYLE_BAR -> {
+                    searchContainer.setBackgroundColor(Color.WHITE)
+                    bottomLine.visibility = VISIBLE
+                }
+                else -> {
+                    searchContainer.setBackgroundColor(Color.WHITE)
+                    bottomLine.visibility = VISIBLE
+                }
+            }
+            searchContainer.layoutParams = layoutParams
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                searchContainer.elevation = elevation
+            }
         }
-
-        searchContainer.setLayoutParams(layoutParams);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            searchContainer.setElevation(elevation);
+    private val cardStyleBackground: GradientDrawable
+        get() {
+            val drawable = GradientDrawable()
+            drawable.setColor(Color.WHITE)
+            drawable.cornerRadius = convertDpToPx(CARD_CORNER_RADIUS, context).toFloat()
+            return drawable
         }
-    }
-
-    private GradientDrawable getCardStyleBackground() {
-        GradientDrawable drawable = new GradientDrawable();
-        drawable.setColor(Color.WHITE);
-        drawable.setCornerRadius(DimensUtils.convertDpToPx(CARD_CORNER_RADIUS, context));
-        return drawable;
-    }
 
     /**
      * Sets icons alpha, does not set the back/up icon
      */
-    public void setIconsAlpha(float alpha) {
-        clearButton.setAlpha(alpha);
-        voiceButton.setAlpha(alpha);
+    fun setIconsAlpha(alpha: Float) = with(binding) {
+        clearButton.alpha = alpha
+        voiceButton.alpha = alpha
     }
 
     /**
      * Sets icons colors, does not set back/up icon
      */
-    public void setIconsColor(@ColorInt int color) {
-        ImageViewCompat.setImageTintList(clearButton, ColorStateList.valueOf(color));
-        ImageViewCompat.setImageTintList(voiceButton, ColorStateList.valueOf(color));
+    fun setIconsColor(@ColorInt color: Int) = with(binding) {
+        ImageViewCompat.setImageTintList(clearButton, ColorStateList.valueOf(color))
+        ImageViewCompat.setImageTintList(voiceButton, ColorStateList.valueOf(color))
     }
 
     /**
      * Sets the back/up icon alpha; does not set other icons
      */
-    public void setBackIconAlpha(float alpha) {
-        backButton.setAlpha(alpha);
+    fun setBackIconAlpha(alpha: Float) = with(binding) {
+        backButton.alpha = alpha
     }
 
     /**
      * Sets the back/up icon drawable; does not set other icons
      */
-    public void setBackIconColor(@ColorInt int color) {
-        ImageViewCompat.setImageTintList(backButton, ColorStateList.valueOf(color));
+    fun setBackIconColor(@ColorInt color: Int) = with(binding) {
+        ImageViewCompat.setImageTintList(backButton, ColorStateList.valueOf(color))
     }
 
     /**
      * Sets the back/up icon drawable
      */
-    public void setBackIconDrawable(Drawable drawable) {
-        backButton.setImageDrawable(drawable);
+    fun setBackIconDrawable(drawable: Drawable?) = with(binding) {
+        backButton.setImageDrawable(drawable)
     }
 
     /**
      * Sets a custom Drawable for the voice search button
      */
-    public void setVoiceIconDrawable(Drawable drawable) {
-        voiceButton.setImageDrawable(drawable);
+    fun setVoiceIconDrawable(drawable: Drawable?) = with(binding) {
+        voiceButton.setImageDrawable(drawable)
     }
 
     /**
      * Sets a custom Drawable for the clear text button
      */
-    public void setClearIconDrawable(Drawable drawable) {
-        clearButton.setImageDrawable(drawable);
+    fun setClearIconDrawable(drawable: Drawable?) = with(binding) {
+        clearButton.setImageDrawable(drawable)
     }
 
-    public void setSearchBackground(Drawable background) {
-        searchContainer.setBackground(background);
+    fun setSearchBackground(background: Drawable?) = with(binding) {
+        searchContainer.background = background
     }
 
-    public void setTextColor(@ColorInt int color) {
-        searchEditText.setTextColor(color);
+    fun setTextColor(@ColorInt color: Int) = with(binding) {
+        searchEditText.setTextColor(color)
     }
 
-    public void setHintTextColor(@ColorInt int color) {
-        searchEditText.setHintTextColor(color);
+    fun setHintTextColor(@ColorInt color: Int) = with(binding) {
+        searchEditText.setHintTextColor(color)
     }
 
-    public void setHint(CharSequence hint) {
-        searchEditText.setHint(hint);
+    fun setHint(hint: CharSequence?) = with(binding) {
+        searchEditText.hint = hint
     }
 
-    public void setInputType(int inputType) {
-        searchEditText.setInputType(inputType);
+    fun setInputType(inputType: Int) = with(binding) {
+        searchEditText.inputType = inputType
     }
 
     /**
      * Uses reflection to set the search EditText cursor drawable
      */
-    public void setCursorDrawable(@DrawableRes int drawable) {
-        EditTextReflectionUtils.setCursorDrawable(searchEditText, drawable);
+    fun setCursorDrawable(@DrawableRes drawable: Int) = with(binding) {
+        setCursorDrawable(searchEditText, drawable)
     }
 
     /**
      * Uses reflection to set the search EditText cursor color
      */
-    public void setCursorColor(@ColorInt int color) {
-        EditTextReflectionUtils.setCursorColor(searchEditText, color);
+    fun setCursorColor(@ColorInt color: Int) = with(binding) {
+        setCursorColor(searchEditText, color)
     }
 
-    public void enableVoiceSearch(boolean voiceSearch) {
-        allowVoiceSearch = voiceSearch;
-    }
-
-    /**
-     * @return EditText view that contains the search query, can be used with hooks like RxBinding
-     */
-    public EditText getSearchEditText() {
-        return searchEditText;
+    fun enableVoiceSearch(voiceSearch: Boolean) {
+        allowVoiceSearch = voiceSearch
     }
 
     /**
-     * @param query  query text
+     * @param sequence  query text
      * @param submit true to submit the query
      */
-    public void setQuery(CharSequence query, boolean submit) {
-        searchEditText.setText(query);
-        if (query != null) {
-            searchEditText.setSelection(searchEditText.length());
-            this.query = query;
+    fun setQuery(sequence: CharSequence?, submit: Boolean) = with(binding) {
+        searchEditText.setText(sequence)
+        if (sequence != null) {
+            searchEditText.setSelection(searchEditText.length())
+            query = sequence
         }
-        if (submit && !TextUtils.isEmpty(query)) {
-            onSubmitQuery();
+        if (submit && !TextUtils.isEmpty(sequence)) {
+            onSubmitQuery()
         }
     }
 
@@ -734,11 +581,11 @@ public class SimpleSearchView extends FrameLayout {
      *
      * @param show true to enable the voice search icon
      */
-    public void showVoice(boolean show) {
-        if (show && isVoiceAvailable() && allowVoiceSearch) {
-            voiceButton.setVisibility(VISIBLE);
+    fun showVoice(show: Boolean) = with(binding) {
+        if (show && isVoiceAvailable && allowVoiceSearch) {
+            voiceButton.visibility = VISIBLE
         } else {
-            voiceButton.setVisibility(GONE);
+            voiceButton.visibility = GONE
         }
     }
 
@@ -747,58 +594,18 @@ public class SimpleSearchView extends FrameLayout {
      *
      * @param menuItem MenuItem that opens the search
      */
-    public void setMenuItem(@NonNull MenuItem menuItem) {
-        menuItem.setOnMenuItemClickListener(item -> {
-            showSearch();
-            return true;
-        });
-    }
-
-    public boolean isSearchOpen() {
-        return isSearchOpen;
-    }
-
-    /**
-     * @return current reveal or fade animations duration
-     */
-    public int getAnimationDuration() {
-        return animationDuration;
-    }
-
-    /**
-     * @param duration duration, in ms, of the reveal or fade animations
-     */
-    public void setAnimationDuration(int duration) {
-        animationDuration = duration;
-    }
-
-    /**
-     * @return center of the reveal animation, by default it is placed where the rightmost MenuItem would be
-     */
-    public Point getRevealAnimationCenter() {
-        if (revealAnimationCenter != null) {
-            return revealAnimationCenter;
+    fun setMenuItem(menuItem: MenuItem) {
+        menuItem.setOnMenuItemClickListener {
+            showSearch()
+            true
         }
-
-        int centerX = getWidth() - DimensUtils.convertDpToPx(ANIMATION_CENTER_PADDING, context);
-        int centerY = getHeight() / 2;
-
-        revealAnimationCenter = new Point(centerX, centerY);
-        return revealAnimationCenter;
-    }
-
-    /**
-     * @param revealAnimationCenter center of the reveal animation, used to customize the origin of the animation
-     */
-    public void setRevealAnimationCenter(Point revealAnimationCenter) {
-        this.revealAnimationCenter = revealAnimationCenter;
     }
 
     /**
      * @param listener listens to query changes
      */
-    public void setOnQueryTextListener(OnQueryTextListener listener) {
-        onQueryChangeListener = listener;
+    fun setOnQueryTextListener(listener: OnQueryTextListener?) {
+        onQueryChangeListener = listener
     }
 
     /**
@@ -806,101 +613,115 @@ public class SimpleSearchView extends FrameLayout {
      *
      * @param listener listens to SimpleSearchView opening, closing, and the animations end
      */
-    public void setOnSearchViewListener(SearchViewListener listener) {
-        searchViewListener = listener;
+    fun setOnSearchViewListener(listener: SearchViewListener?) {
+        searchViewListener = listener
     }
 
-    public void setVoiceSearchPrompt(String voiceSearchPrompt) {
-        this.voiceSearchPrompt = voiceSearchPrompt;
+    fun setVoiceSearchPrompt(voiceSearchPrompt: String?) {
+        this.voiceSearchPrompt = voiceSearchPrompt
     }
 
+    internal class SavedState : BaseSavedState {
+        var query: String? = null
+        var isSearchOpen = false
+        var animationDuration = 0
+        var voiceSearchPrompt: String? = null
+        var keepQuery = false
 
-    static class SavedState extends BaseSavedState {
-        //required field that makes Parcelables from a Parcel
-        public static final Creator<SavedState> CREATOR =
-                new Creator<SavedState>() {
-                    public SavedState createFromParcel(Parcel in) {
-                        return new SavedState(in);
-                    }
-
-                    public SavedState[] newArray(int size) {
-                        return new SavedState[size];
-                    }
-                };
-        String query;
-        boolean isSearchOpen;
-        int animationDuration;
-        String voiceSearchPrompt;
-        boolean keepQuery;
-
-        SavedState(Parcelable superState) {
-            super(superState);
+        constructor(superState: Parcelable?) : super(superState)
+        private constructor(`in`: Parcel) : super(`in`) {
+            query = `in`.readString()
+            isSearchOpen = `in`.readInt() == 1
+            animationDuration = `in`.readInt()
+            voiceSearchPrompt = `in`.readString()
+            keepQuery = `in`.readInt() == 1
         }
 
-        private SavedState(Parcel in) {
-            super(in);
-            this.query = in.readString();
-            this.isSearchOpen = in.readInt() == 1;
-            this.animationDuration = in.readInt();
-            this.voiceSearchPrompt = in.readString();
-            this.keepQuery = in.readInt() == 1;
+        override fun writeToParcel(out: Parcel, flags: Int) {
+            super.writeToParcel(out, flags)
+            out.writeString(query)
+            out.writeInt(if (isSearchOpen) 1 else 0)
+            out.writeInt(animationDuration)
+            out.writeString(voiceSearchPrompt)
+            out.writeInt(if (keepQuery) 1 else 0)
         }
 
-        @Override
-        public void writeToParcel(Parcel out, int flags) {
-            super.writeToParcel(out, flags);
-            out.writeString(query);
-            out.writeInt(isSearchOpen ? 1 : 0);
-            out.writeInt(animationDuration);
-            out.writeString(voiceSearchPrompt);
-            out.writeInt(keepQuery ? 1 : 0);
+        companion object {
+            //required field that makes Parcelables from a Parcel
+            val CREATOR: Parcelable.Creator<SavedState?> = object : Parcelable.Creator<SavedState?> {
+                override fun createFromParcel(`in`: Parcel): SavedState? {
+                    return SavedState(`in`)
+                }
+
+                override fun newArray(size: Int): Array<SavedState?> {
+                    return arrayOfNulls(size)
+                }
+            }
         }
     }
 
-
-    public interface OnQueryTextListener {
-
+    interface OnQueryTextListener {
         /**
          * @param query the query text
          * @return true to override the default action
          */
-        boolean onQueryTextSubmit(String query);
+        fun onQueryTextSubmit(query: String): Boolean
 
         /**
          * @param newText the query text
          * @return true to override the default action
          */
-        boolean onQueryTextChange(String newText);
+        fun onQueryTextChange(newText: String): Boolean
 
         /**
          * Called when the query text is cleared by the user.
          *
          * @return true to override the default action
          */
-        boolean onQueryTextCleared();
+        fun onQueryTextCleared(): Boolean
     }
 
-
-    public interface SearchViewListener {
-
+    interface SearchViewListener {
         /**
          * Called instantly when the search opens
          */
-        void onSearchViewShown();
+        fun onSearchViewShown()
 
         /**
          * Called instantly when the search closes
          */
-        void onSearchViewClosed();
+        fun onSearchViewClosed()
 
         /**
          * Called at the end of the show animation
          */
-        void onSearchViewShownAnimation();
+        fun onSearchViewShownAnimation()
 
         /**
          * Called at the end of the close animation
          */
-        void onSearchViewClosedAnimation();
+        fun onSearchViewClosedAnimation()
+    }
+
+    companion object {
+        const val REQUEST_VOICE_SEARCH = 735
+        const val CARD_CORNER_RADIUS = 4
+        const val ANIMATION_CENTER_PADDING = 26
+        private const val CARD_PADDING = 6
+        private const val CARD_ELEVATION = 2
+        private const val BACK_ICON_ALPHA_DEFAULT = 0.87f
+        private const val ICONS_ALPHA_DEFAULT = 0.54f
+        const val STYLE_BAR = 0
+        const val STYLE_CARD = 1
+    }
+
+    init {
+        initStyle(attrs, defStyleAttr)
+        initSearchEditText()
+        initClickListeners()
+        showVoice(true)
+        if (!isInEditMode) {
+            visibility = INVISIBLE
+        }
     }
 }

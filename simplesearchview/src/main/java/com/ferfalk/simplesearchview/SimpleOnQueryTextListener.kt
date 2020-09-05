@@ -1,24 +1,21 @@
-package com.ferfalk.simplesearchview;
+package com.ferfalk.simplesearchview
 
 /**
  * @author Fernando A. H. Falkiewicz
  */
-public abstract class SimpleOnQueryTextListener implements SimpleSearchView.OnQueryTextListener {
-    @Override
-    public boolean onQueryTextSubmit(String query) {
+abstract class SimpleOnQueryTextListener : SimpleSearchView.OnQueryTextListener {
+    override fun onQueryTextSubmit(query: String): Boolean {
         // No action
-        return false;
+        return false
     }
 
-    @Override
-    public boolean onQueryTextChange(String newText) {
+    override fun onQueryTextChange(newText: String): Boolean {
         // No action
-        return false;
+        return false
     }
 
-    @Override
-    public boolean onQueryTextCleared() {
+    override fun onQueryTextCleared(): Boolean {
         // No action
-        return false;
+        return false
     }
 }

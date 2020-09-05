@@ -1,392 +1,358 @@
-package com.ferfalk.simplesearchview.utils;
+package com.ferfalk.simplesearchview.utils
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.ObjectAnimator;
-import android.animation.ValueAnimator;
-import android.graphics.Point;
-import android.os.Build;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
-import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
-import android.view.View;
-import android.view.ViewAnimationUtils;
-import android.view.animation.Interpolator;
-
-import java.util.ArrayList;
-import java.util.List;
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
+import android.graphics.Point
+import android.os.Build
+import android.view.View
+import android.view.ViewAnimationUtils
+import android.view.animation.Interpolator
+import androidx.annotation.RequiresApi
+import androidx.core.animation.addListener
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator
+import java.util.*
+import kotlin.math.ceil
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 /**
  * @author Fernando A. H. Falkiewicz
  */
-public class SimpleAnimationUtils {
-    public static final int ANIMATION_DURATION_DEFAULT = 250;
+object SimpleAnimationUtils {
+    const val ANIMATION_DURATION_DEFAULT = 250
 
-    private SimpleAnimationUtils() {
-    }
-
-
-    public static Animator revealOrFadeIn(@NonNull final View view) {
-        return revealOrFadeIn(view, ANIMATION_DURATION_DEFAULT);
-    }
-
-    public static Animator revealOrFadeIn(@NonNull final View view, int duration) {
-        return revealOrFadeIn(view, duration, null, null);
-    }
-
-    public static Animator revealOrFadeIn(@NonNull final View view, int duration, @Nullable final AnimationListener listener) {
-        return revealOrFadeIn(view, duration, listener, null);
-    }
-
-    public static Animator revealOrFadeIn(@NonNull final View view, int duration, @Nullable Point center) {
-        return revealOrFadeIn(view, duration, null, center);
-    }
-
-    public static Animator revealOrFadeIn(@NonNull final View view, @Nullable final AnimationListener listener) {
-        return revealOrFadeIn(view, ANIMATION_DURATION_DEFAULT, listener, null);
-    }
-
-    public static Animator revealOrFadeIn(@NonNull final View view, @Nullable Point center) {
-        return revealOrFadeIn(view, ANIMATION_DURATION_DEFAULT, null, center);
-    }
-
-    public static Animator revealOrFadeIn(@NonNull final View view, @Nullable final AnimationListener listener, @Nullable Point center) {
-        return revealOrFadeIn(view, ANIMATION_DURATION_DEFAULT, listener, center);
-    }
-
-    public static Animator revealOrFadeIn(@NonNull final View view, int duration, @Nullable final AnimationListener listener, @Nullable Point center) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            return reveal(view, duration, listener, center);
+    @JvmStatic
+    @JvmOverloads
+    fun revealOrFadeIn(view: View, duration: Int = ANIMATION_DURATION_DEFAULT, listener: AnimationListener? = null, center: Point? = null): Animator {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            reveal(view, duration, listener, center)
         } else {
-            return fadeIn(view, duration, listener);
+            fadeIn(view, duration, listener)
         }
     }
 
-
-    public static Animator hideOrFadeOut(@NonNull final View view, int duration) {
-        return hideOrFadeOut(view, duration, null, null);
+    @JvmStatic
+    fun revealOrFadeIn(view: View, duration: Int, center: Point?): Animator {
+        return revealOrFadeIn(view, duration, null, center)
     }
 
-    public static Animator hideOrFadeOut(@NonNull final View view, int duration, @Nullable final AnimationListener listener) {
-        return hideOrFadeOut(view, duration, listener, null);
+    @JvmStatic
+    fun revealOrFadeIn(view: View, listener: AnimationListener?): Animator {
+        return revealOrFadeIn(view, ANIMATION_DURATION_DEFAULT, listener, null)
     }
 
-    public static Animator hideOrFadeOut(@NonNull final View view, int duration, @Nullable Point center) {
-        return hideOrFadeOut(view, duration, null, center);
+    @JvmStatic
+    fun revealOrFadeIn(view: View, center: Point?): Animator {
+        return revealOrFadeIn(view, ANIMATION_DURATION_DEFAULT, null, center)
     }
 
-    public static Animator hideOrFadeOut(@NonNull final View view) {
-        return hideOrFadeOut(view, ANIMATION_DURATION_DEFAULT);
+    @JvmStatic
+    fun revealOrFadeIn(view: View, listener: AnimationListener?, center: Point?): Animator {
+        return revealOrFadeIn(view, ANIMATION_DURATION_DEFAULT, listener, center)
     }
 
-    public static Animator hideOrFadeOut(@NonNull final View view, @Nullable final AnimationListener listener) {
-        return hideOrFadeOut(view, ANIMATION_DURATION_DEFAULT, listener, null);
-    }
 
-    public static Animator hideOrFadeOut(@NonNull final View view, @Nullable Point center) {
-        return hideOrFadeOut(view, ANIMATION_DURATION_DEFAULT, null, center);
-    }
 
-    public static Animator hideOrFadeOut(@NonNull final View view, @Nullable final AnimationListener listener, @Nullable Point center) {
-        return hideOrFadeOut(view, ANIMATION_DURATION_DEFAULT, listener, center);
-    }
-
-    public static Animator hideOrFadeOut(@NonNull final View view, int duration, @Nullable final AnimationListener listener, @Nullable Point center) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            return hide(view, duration, listener, center);
+    @JvmStatic
+    @JvmOverloads
+    fun hideOrFadeOut(view: View, duration: Int = ANIMATION_DURATION_DEFAULT, listener: AnimationListener? = null, center: Point? = null): Animator {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            hide(view, duration, listener, center)
         } else {
-            return fadeOut(view, duration, listener);
+            fadeOut(view, duration, listener)
         }
     }
 
+    @JvmStatic
+    fun hideOrFadeOut(view: View, duration: Int, center: Point?): Animator {
+        return hideOrFadeOut(view, duration, null, center)
+    }
+
+    @JvmStatic
+    fun hideOrFadeOut(view: View, listener: AnimationListener?): Animator {
+        return hideOrFadeOut(view, ANIMATION_DURATION_DEFAULT, listener, null)
+    }
+
+    @JvmStatic
+    fun hideOrFadeOut(view: View, center: Point?): Animator {
+        return hideOrFadeOut(view, ANIMATION_DURATION_DEFAULT, null, center)
+    }
+
+    @JvmStatic
+    fun hideOrFadeOut(view: View, listener: AnimationListener?, center: Point?): Animator {
+        return hideOrFadeOut(view, ANIMATION_DURATION_DEFAULT, listener, center)
+    }
+
+
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    public static Animator reveal(@NonNull final View view, int duration) {
-        return reveal(view, duration, null, null);
+    @JvmStatic
+    fun reveal(view: View, duration: Int): Animator {
+        return reveal(view, duration, null, null)
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    public static Animator reveal(@NonNull final View view, int duration, @Nullable Point center) {
-        return reveal(view, duration, null, center);
+    @JvmStatic
+    fun reveal(view: View, duration: Int, center: Point?): Animator {
+        return reveal(view, duration, null, center)
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    public static Animator reveal(@NonNull final View view, int duration, @Nullable final AnimationListener listener) {
-        return reveal(view, duration, listener, null);
+    @JvmStatic
+    fun reveal(view: View, duration: Int, listener: AnimationListener?): Animator {
+        return reveal(view, duration, listener, null)
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    public static Animator reveal(@NonNull final View view) {
-        return reveal(view, ANIMATION_DURATION_DEFAULT);
+    @JvmStatic
+    fun reveal(view: View): Animator {
+        return reveal(view, ANIMATION_DURATION_DEFAULT)
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    public static Animator reveal(@NonNull final View view, @Nullable final AnimationListener listener) {
-        return reveal(view, ANIMATION_DURATION_DEFAULT, listener, null);
+    @JvmStatic
+    fun reveal(view: View, listener: AnimationListener?): Animator {
+        return reveal(view, ANIMATION_DURATION_DEFAULT, listener, null)
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    public static Animator reveal(@NonNull final View view, @Nullable Point center) {
-        return reveal(view, ANIMATION_DURATION_DEFAULT, null, center);
+    @JvmStatic
+    fun reveal(view: View, center: Point?): Animator {
+        return reveal(view, ANIMATION_DURATION_DEFAULT, null, center)
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    public static Animator reveal(@NonNull final View view, @Nullable final AnimationListener listener, @Nullable Point center) {
-        return reveal(view, ANIMATION_DURATION_DEFAULT, listener, center);
+    @JvmStatic
+    fun reveal(view: View, listener: AnimationListener?, center: Point?): Animator {
+        return reveal(view, ANIMATION_DURATION_DEFAULT, listener, center)
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    public static Animator reveal(@NonNull final View view, int duration, @Nullable final AnimationListener listener, @Nullable Point center) {
-        if (center == null) {
-            center = getDefaultCenter(view);
+    @JvmStatic
+    fun reveal(view: View, duration: Int, listener: AnimationListener?, center: Point?): Animator {
+        var centerMutable = center
+        if (centerMutable == null) {
+            centerMutable = getDefaultCenter(view)
         }
 
-        Animator anim = ViewAnimationUtils.createCircularReveal(view, center.x, center.y, 0, getRevealRadius(center, view));
-        anim.addListener(new DefaultActionAnimationListener(view, listener) {
-            @Override
-            void defaultOnAnimationStart(@NonNull View view) {
-                view.setVisibility(View.VISIBLE);
+        val anim = ViewAnimationUtils.createCircularReveal(view, centerMutable.x, centerMutable.y, 0f, getRevealRadius(centerMutable, view).toFloat())
+        anim.addListener(object : DefaultActionAnimationListener(view, listener) {
+            override fun defaultOnAnimationStart(view: View) {
+                view.visibility = View.VISIBLE
             }
-        });
-
-        anim.setDuration(duration);
-        anim.setInterpolator(getDefaultInterpolator());
-        return anim;
+        })
+        anim.duration = duration.toLong()
+        anim.interpolator = defaultInterpolator
+        return anim
     }
 
 
+
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    public static Animator hide(@NonNull final View view, int duration) {
-        return hide(view, duration, null, null);
+    @JvmStatic
+    fun hide(view: View, duration: Int): Animator {
+        return hide(view, duration, null, null)
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    public static Animator hide(@NonNull final View view, int duration, @Nullable Point center) {
-        return hide(view, duration, null, center);
+    @JvmStatic
+    fun hide(view: View, duration: Int, center: Point?): Animator {
+        return hide(view, duration, null, center)
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    public static Animator hide(@NonNull final View view, int duration, @Nullable final AnimationListener listener) {
-        return hide(view, duration, listener, null);
+    @JvmStatic
+    fun hide(view: View, duration: Int, listener: AnimationListener?): Animator {
+        return hide(view, duration, listener, null)
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    public static Animator hide(@NonNull final View view) {
-        return hide(view, ANIMATION_DURATION_DEFAULT);
+    @JvmStatic
+    fun hide(view: View): Animator {
+        return hide(view, ANIMATION_DURATION_DEFAULT)
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    public static Animator hide(@NonNull final View view, @Nullable final AnimationListener listener) {
-        return hide(view, ANIMATION_DURATION_DEFAULT, listener, null);
+    @JvmStatic
+    fun hide(view: View, listener: AnimationListener?): Animator {
+        return hide(view, ANIMATION_DURATION_DEFAULT, listener, null)
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    public static Animator hide(@NonNull final View view, @Nullable Point center) {
-        return hide(view, ANIMATION_DURATION_DEFAULT, null, center);
+    @JvmStatic
+    fun hide(view: View, center: Point?): Animator {
+        return hide(view, ANIMATION_DURATION_DEFAULT, null, center)
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    public static Animator hide(@NonNull final View view, @Nullable final AnimationListener listener, @Nullable Point center) {
-        return hide(view, ANIMATION_DURATION_DEFAULT, listener, center);
+    @JvmStatic
+    fun hide(view: View, listener: AnimationListener?, center: Point?): Animator {
+        return hide(view, ANIMATION_DURATION_DEFAULT, listener, center)
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    public static Animator hide(@NonNull final View view, int duration, @Nullable final AnimationListener listener, @Nullable Point center) {
-        if (center == null) {
-            center = getDefaultCenter(view);
+    @JvmStatic
+    fun hide(view: View, duration: Int, listener: AnimationListener?, center: Point?): Animator {
+        var centerMutable = center
+        if (centerMutable == null) {
+            centerMutable = getDefaultCenter(view)
         }
 
-        Animator anim = ViewAnimationUtils.createCircularReveal(view, center.x, center.y, getRevealRadius(center, view), 0);
-        anim.addListener(new DefaultActionAnimationListener(view, listener) {
-            @Override
-            void defaultOnAnimationEnd(@NonNull View view) {
-                view.setVisibility(View.GONE);
+        val anim = ViewAnimationUtils.createCircularReveal(view, centerMutable.x, centerMutable.y, getRevealRadius(centerMutable, view).toFloat(), 0f)
+        anim.addListener(object : DefaultActionAnimationListener(view, listener) {
+            override fun defaultOnAnimationEnd(view: View) {
+                view.visibility = View.GONE
             }
-        });
-
-        anim.setDuration(duration);
-        anim.setInterpolator(getDefaultInterpolator());
-        return anim;
+        })
+        anim.duration = duration.toLong()
+        anim.interpolator = defaultInterpolator
+        return anim
     }
 
-
-    protected static Point getDefaultCenter(@NonNull View view) {
-        return new Point(view.getWidth() / 2, view.getHeight() / 2);
+    @JvmStatic
+    internal fun getDefaultCenter(view: View): Point {
+        return Point(view.width / 2, view.height / 2)
     }
 
-    protected static int getRevealRadius(@NonNull Point center, @NonNull View view) {
-        float radius = 0;
-        List<Point> points = new ArrayList<>();
-        points.add(new Point(view.getLeft(), view.getTop()));
-        points.add(new Point(view.getRight(), view.getTop()));
-        points.add(new Point(view.getLeft(), view.getBottom()));
-        points.add(new Point(view.getRight(), view.getBottom()));
+    @JvmStatic
+    internal fun getRevealRadius(center: Point, view: View): Int {
+        var radius = 0f
+        val points: MutableList<Point> = ArrayList()
+        points.add(Point(view.left, view.top))
+        points.add(Point(view.right, view.top))
+        points.add(Point(view.left, view.bottom))
+        points.add(Point(view.right, view.bottom))
 
-        for (Point point : points) {
-            float distance = distance(center, point);
+        for (point in points) {
+            val distance = distance(center, point)
             if (distance > radius) {
-                radius = distance;
+                radius = distance
             }
         }
-
-        return (int) Math.ceil(radius);
+        return ceil(radius.toDouble()).toInt()
     }
 
-
-    public static float distance(Point first, Point second) {
-        return (float) Math.sqrt(Math.pow(first.x - second.x, 2) + Math.pow(first.y - second.y, 2));
+    @JvmStatic
+    fun distance(first: Point, second: Point): Float {
+        return sqrt((first.x - second.x.toDouble()).pow(2.0) + (first.y - second.y.toDouble()).pow(2.0)).toFloat()
     }
 
-
-    public static Animator fadeIn(@NonNull View view) {
-        return fadeIn(view, ANIMATION_DURATION_DEFAULT);
+    @JvmStatic
+    fun fadeIn(view: View, listener: AnimationListener?): Animator {
+        return fadeIn(view, ANIMATION_DURATION_DEFAULT, listener)
     }
 
-    public static Animator fadeIn(@NonNull View view, int duration) {
-        return fadeIn(view, duration, null);
-    }
-
-    public static Animator fadeIn(@NonNull View view, @Nullable final AnimationListener listener) {
-        return fadeIn(view, ANIMATION_DURATION_DEFAULT, listener);
-    }
-
-    public static Animator fadeIn(@NonNull View view, int duration, @Nullable final AnimationListener listener) {
-        if (view.getAlpha() == 1f) {
-            view.setAlpha(0);
+    @JvmOverloads
+    @JvmStatic
+    fun fadeIn(view: View, duration: Int = ANIMATION_DURATION_DEFAULT, listener: AnimationListener? = null): Animator {
+        if (view.alpha == 1f) {
+            view.alpha = 0f
         }
 
-        ObjectAnimator anim = ObjectAnimator.ofFloat(view, "alpha", 1f);
-        anim.addListener(new DefaultActionAnimationListener(view, listener) {
-            @Override
-            void defaultOnAnimationStart(@NonNull View view) {
-                view.setVisibility(View.VISIBLE);
+        val anim = ObjectAnimator.ofFloat(view, "alpha", 1f)
+        anim.addListener(object : DefaultActionAnimationListener(view, listener) {
+            override fun defaultOnAnimationStart(view: View) {
+                view.visibility = View.VISIBLE
             }
-        });
+        })
 
-        anim.setDuration(duration);
-        anim.setInterpolator(getDefaultInterpolator());
-        return anim;
+        anim.duration = duration.toLong()
+        anim.interpolator = defaultInterpolator
+        return anim
     }
 
-
-    public static Animator fadeOut(@NonNull View view) {
-        return fadeOut(view, ANIMATION_DURATION_DEFAULT);
+    @JvmStatic
+    fun fadeOut(view: View, listener: AnimationListener?): Animator {
+        return fadeOut(view, ANIMATION_DURATION_DEFAULT, listener)
     }
 
-    public static Animator fadeOut(@NonNull View view, int duration) {
-        return fadeOut(view, duration, null);
-    }
-
-    public static Animator fadeOut(@NonNull View view, @Nullable final AnimationListener listener) {
-        return fadeOut(view, ANIMATION_DURATION_DEFAULT, listener);
-    }
-
-    public static Animator fadeOut(@NonNull View view, int duration, @Nullable final AnimationListener listener) {
-        ObjectAnimator anim = ObjectAnimator.ofFloat(view, "alpha", 0f);
-        anim.addListener(new DefaultActionAnimationListener(view, listener) {
-            @Override
-            void defaultOnAnimationEnd(@NonNull View view) {
-                view.setVisibility(View.GONE);
+    @JvmOverloads
+    @JvmStatic
+    fun fadeOut(view: View, duration: Int = ANIMATION_DURATION_DEFAULT, listener: AnimationListener? = null): Animator {
+        val anim = ObjectAnimator.ofFloat(view, "alpha", 0f)
+        anim.addListener(object : DefaultActionAnimationListener(view, listener) {
+            override fun defaultOnAnimationEnd(view: View) {
+                view.visibility = View.GONE
             }
-        });
+        })
 
-        anim.setDuration(duration);
-        anim.setInterpolator(getDefaultInterpolator());
-        return anim;
+        anim.duration = duration.toLong()
+        anim.interpolator = defaultInterpolator
+        return anim
     }
 
-
-    public static Animator verticalSlideView(@NonNull View view, int fromHeight, int toHeight) {
-        return verticalSlideView(view, fromHeight, toHeight, null);
+    @JvmOverloads
+    @JvmStatic
+    fun verticalSlideView(view: View, fromHeight: Int, toHeight: Int, listener: AnimationListener? = null): Animator {
+        return verticalSlideView(view, fromHeight, toHeight, ANIMATION_DURATION_DEFAULT, listener)
     }
 
-    public static Animator verticalSlideView(@NonNull View view, int fromHeight, int toHeight, int duration) {
-        return verticalSlideView(view, fromHeight, toHeight, duration, null);
+    @JvmOverloads
+    @JvmStatic
+    fun verticalSlideView(view: View, fromHeight: Int, toHeight: Int, duration: Int, listener: AnimationListener? = null): Animator {
+        val anim = ValueAnimator
+                .ofInt(fromHeight, toHeight)
+        anim.addUpdateListener { animation: ValueAnimator ->
+            view.layoutParams.height = animation.animatedValue as Int
+            view.requestLayout()
+        }
+        anim.addListener(DefaultActionAnimationListener(view, listener))
+        anim.duration = duration.toLong()
+        anim.interpolator = defaultInterpolator
+        return anim
     }
 
-    public static Animator verticalSlideView(@NonNull View view, int fromHeight, int toHeight, @Nullable final AnimationListener listener) {
-        return verticalSlideView(view, fromHeight, toHeight, ANIMATION_DURATION_DEFAULT, listener);
-    }
+    @JvmStatic
+    internal val defaultInterpolator: Interpolator
+        get() = FastOutSlowInInterpolator()
 
-    public static Animator verticalSlideView(@NonNull View view, int fromHeight, int toHeight, int duration, @Nullable final AnimationListener listener) {
-        ValueAnimator anim = ValueAnimator
-                .ofInt(fromHeight, toHeight);
-
-        anim.addUpdateListener(animation -> {
-            view.getLayoutParams().height = (int) (Integer) animation.getAnimatedValue();
-            view.requestLayout();
-        });
-
-        anim.addListener(new DefaultActionAnimationListener(view, listener));
-
-        anim.setDuration(duration);
-        anim.setInterpolator(getDefaultInterpolator());
-        return anim;
-    }
-
-
-    protected static Interpolator getDefaultInterpolator() {
-        return new FastOutSlowInInterpolator();
-    }
-
-
-    public interface AnimationListener {
+    interface AnimationListener {
         /**
          * @return return true to override the default behaviour
          */
-        boolean onAnimationStart(@NonNull View view);
+        fun onAnimationStart(view: View): Boolean
 
         /**
          * @return return true to override the default behaviour
          */
-        boolean onAnimationEnd(@NonNull View view);
+        fun onAnimationEnd(view: View): Boolean
 
         /**
          * @return return true to override the default behaviour
          */
-        boolean onAnimationCancel(@NonNull View view);
+        fun onAnimationCancel(view: View): Boolean
     }
 
-    private static class DefaultActionAnimationListener extends AnimatorListenerAdapter {
-        private View view;
-        private AnimationListener listener;
-
-        DefaultActionAnimationListener(@NonNull View view, @Nullable AnimationListener listener) {
-            this.view = view;
-            this.listener = listener;
-        }
-
-        @Override
-        public void onAnimationStart(Animator animation) {
+    private open class DefaultActionAnimationListener constructor(private val view: View, private val listener: AnimationListener?) : AnimatorListenerAdapter() {
+        override fun onAnimationStart(animation: Animator) {
             if (listener == null || !listener.onAnimationStart(view)) {
-                defaultOnAnimationStart(view);
+                defaultOnAnimationStart(view)
             }
         }
 
-        @Override
-        public void onAnimationEnd(Animator animation) {
+        override fun onAnimationEnd(animation: Animator) {
             if (listener == null || !listener.onAnimationEnd(view)) {
-                defaultOnAnimationEnd(view);
+                defaultOnAnimationEnd(view)
             }
         }
 
-        @Override
-        public void onAnimationCancel(Animator animation) {
+        override fun onAnimationCancel(animation: Animator) {
             if (listener == null || !listener.onAnimationCancel(view)) {
-                defaultOnAnimationCancel(view);
+                defaultOnAnimationCancel(view)
             }
         }
 
-        void defaultOnAnimationStart(@NonNull View view) {
+        open fun defaultOnAnimationStart(view: View) {
             // No default action
         }
 
-        void defaultOnAnimationEnd(@NonNull View view) {
+        open fun defaultOnAnimationEnd(view: View) {
             // No default action
         }
 
-        void defaultOnAnimationCancel(@NonNull View view) {
+        fun defaultOnAnimationCancel(view: View) {
             // No default action
         }
     }

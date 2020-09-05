@@ -1,18 +1,17 @@
-package com.ferfalk.simplesearchview.utils;
+package com.ferfalk.simplesearchview.utils
 
-import android.content.Context;
-import androidx.annotation.NonNull;
-import android.util.TypedValue;
+import android.content.Context
+import android.util.TypedValue
+import kotlin.math.roundToInt
 
-public class DimensUtils {
-    private DimensUtils() {
+object DimensUtils {
+    @JvmStatic
+    fun convertDpToPx(dp: Int, context: Context): Int {
+        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp.toFloat(), context.resources.displayMetrics).roundToInt()
     }
 
-    public static int convertDpToPx(int dp, @NonNull Context context) {
-        return Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, context.getResources().getDisplayMetrics()));
-    }
-
-    public static float convertDpToPx(float dp, @NonNull Context context) {
-        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, context.getResources().getDisplayMetrics());
+    @JvmStatic
+    fun convertDpToPx(dp: Float, context: Context): Float {
+        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, context.resources.displayMetrics)
     }
 }

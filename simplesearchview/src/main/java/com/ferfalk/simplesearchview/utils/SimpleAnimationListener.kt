@@ -1,27 +1,23 @@
-package com.ferfalk.simplesearchview.utils;
+package com.ferfalk.simplesearchview.utils
 
-import androidx.annotation.NonNull;
-import android.view.View;
+import android.view.View
 
 /**
  * @author Fernando A. H. Falkiewicz
  */
-public abstract class SimpleAnimationListener implements SimpleAnimationUtils.AnimationListener {
-    @Override
-    public boolean onAnimationStart(@NonNull View view) {
+abstract class SimpleAnimationListener : SimpleAnimationUtils.AnimationListener {
+    override fun onAnimationStart(view: View): Boolean {
         // No action
-        return false;
+        return false
     }
 
-    @Override
-    public boolean onAnimationEnd(@NonNull View view) {
+    override fun onAnimationEnd(view: View): Boolean {
         // No action
-        return false;
+        return false
     }
 
-    @Override
-    public boolean onAnimationCancel(@NonNull View view) {
+    override fun onAnimationCancel(view: View): Boolean {
         // No action
-        return false;
+        return false
     }
 }
