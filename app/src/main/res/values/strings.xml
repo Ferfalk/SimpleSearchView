@@ -6,4 +6,7 @@
     <string name="tab_text_3">Tab 3</string>
     <string name="section_format">Hello World from section: %1$d</string>
     <string name="example">Example</string>
+    <string name="changed">changed: %1$s</string>
+    <string name="submitted">submitted: %1$s</string>
+    <string name="cleared">cleared</string>
 </resources>
