@@ -36,9 +36,9 @@
             android:layout_height="match_parent"
             android:alpha="0.87"
             android:contentDescription="@string/action_back"
-            android:tint="?attr/colorPrimary"
             app:layout_constraintStart_toStartOf="parent"
-            app:srcCompat="@drawable/ic_arrow_back_black_24dp" />
+            app:srcCompat="@drawable/ic_arrow_back_black_24dp"
+            app:tint="?attr/colorPrimary" />
 
         <ImageButton
             android:id="@+id/voiceButton"
