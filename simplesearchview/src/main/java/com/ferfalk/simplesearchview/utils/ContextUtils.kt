@@ -7,7 +7,6 @@ import android.util.TypedValue
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.annotation.ColorInt
-import com.ferfalk.simplesearchview.R
 
 /**
  * @author Fernando A. H. Falkiewicz
@@ -26,7 +25,7 @@ object ContextUtils {
     @ColorInt
     fun getPrimaryColor(context: Context): Int {
         val value = TypedValue()
-        context.theme.resolveAttribute(R.attr.colorPrimary, value, true)
+        context.theme.resolveAttribute(android.R.attr.colorPrimary, value, true)
         return value.data
     }
 
@@ -34,7 +33,7 @@ object ContextUtils {
     @ColorInt
     fun getAccentColor(context: Context): Int {
         val value = TypedValue()
-        context.theme.resolveAttribute(R.attr.colorAccent, value, true)
+        context.theme.resolveAttribute(android.R.attr.colorAccent, value, true)
         return value.data
     }
 
