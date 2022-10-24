@@ -13,7 +13,6 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Parcel
 import android.os.Parcelable
 import android.speech.RecognizerIntent
-import android.text.TextUtils
 import android.util.AttributeSet
 import android.view.*
 import android.view.View.OnFocusChangeListener
@@ -274,8 +273,7 @@ class SimpleSearchView @JvmOverloads constructor(creationContext: Context, attrs
             clearButton.visibility = GONE
             showVoice(true)
         }
-        if(newText == oldQuery)
-        if (!TextUtils.equals(newText, oldQuery)) {
+        if(!(newText == oldQuery)) {
             onQueryChangeListener?.onQueryTextChange(newText.toString())
         }
         oldQuery = newText.toString()
@@ -455,7 +453,7 @@ class SimpleSearchView @JvmOverloads constructor(creationContext: Context, attrs
             val matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
             if (!matches.isNullOrEmpty()) {
                 val searchWrd = matches[0]
-                if (!TextUtils.isEmpty(searchWrd)) {
+                if (searchWrd.isNotEmpty()) {
                     setQuery(searchWrd, submit)
                 }
             }
@@ -599,12 +597,12 @@ class SimpleSearchView @JvmOverloads constructor(creationContext: Context, attrs
      */
     fun setQuery(sequence: CharSequence?, submit: Boolean) {
         searchEditText.setText(sequence)
-        if (sequence != null) {
+        sequence?.let {
             searchEditText.setSelection(searchEditText.length())
-            query = sequence
-        }
-        if (submit && !TextUtils.isEmpty(sequence)) {
-            onSubmitQuery()
+            query = it
+            if (submit && it.isNotEmpty()) {
+                onSubmitQuery()
+            }
         }
     }
 
