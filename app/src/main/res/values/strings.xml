@@ -1,12 +1,12 @@
 <resources>
-    <string name="app_name">SimpleSearchView Example</string>
-    <string name="app_subtitle">SimpleSearchView</string>
-    <string name="tab_text_1">Tab 1</string>
-    <string name="tab_text_2">Tab 2</string>
-    <string name="tab_text_3">Tab 3</string>
-    <string name="section_format">Hello World from section: %1$d</string>
-    <string name="example">Example</string>
-    <string name="changed">changed: %1$s</string>
-    <string name="submitted">submitted: %1$s</string>
-    <string name="cleared">cleared</string>
+    <string name="app_name" translatable="false">SimpleSearchView Example</string>
+    <string name="app_subtitle" translatable="false">SimpleSearchView</string>
+    <string name="tab_text_1" translatable="false">Tab 1</string>
+    <string name="tab_text_2" translatable="false">Tab 2</string>
+    <string name="tab_text_3" translatable="false">Tab 3</string>
+    <string name="section_format" translatable="false">Hello World from section: %1$d</string>
+    <string name="example" translatable="false">Example</string>
+    <string name="changed" translatable="false">changed: %1$s</string>
+    <string name="submitted" translatable="false">submitted: %1$s</string>
+    <string name="cleared" translatable="false">cleared</string>
 </resources>
