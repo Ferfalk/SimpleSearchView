@@ -10,7 +10,6 @@ import android.graphics.Point
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
-import android.os.Build
 import android.os.Parcel
 import android.os.Parcelable
 import android.speech.RecognizerIntent
@@ -68,8 +67,7 @@ class SimpleSearchView @JvmOverloads constructor(creationContext: Context, attrs
     annotation class Style
 
     /**
-     * @param animationDuration duration, in ms, of the reveal or fade animations
-     * @return current reveal or fade animations duration
+     * The duration (in ms) of the reveal or fade animations
      */
     var animationDuration = SimpleAnimationUtils.ANIMATION_DURATION_DEFAULT
 
@@ -496,9 +494,7 @@ class SimpleSearchView @JvmOverloads constructor(creationContext: Context, attrs
                 }
             }
             searchContainer.layoutParams = layoutParams
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                searchContainer.elevation = elevation
-            }
+            searchContainer.elevation = elevation
         }
     private val cardStyleBackground: GradientDrawable
         get() {
