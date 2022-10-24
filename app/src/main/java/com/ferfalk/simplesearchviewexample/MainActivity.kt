@@ -9,33 +9,36 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.FragmentPagerAdapter
+import androidx.fragment.app.FragmentActivity
+import androidx.viewpager2.adapter.FragmentStateAdapter
+import androidx.viewpager2.widget.ViewPager2
 import com.ferfalk.simplesearchview.SimpleSearchView
 import com.ferfalk.simplesearchview.utils.DimensUtils.convertDpToPx
-import com.ferfalk.simplesearchviewexample.databinding.ActivityMainBinding
 import com.google.android.material.tabs.TabLayout
-import com.google.android.material.tabs.TabLayout.TabLayoutOnPageChangeListener
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityMainBinding
     private val TAG = MainActivity::class.java.simpleName
+
+    private val container by lazy { findViewById<ViewPager2>(R.id.container) }
+    private val toolbar by lazy { findViewById<Toolbar>(R.id.toolbar) }
+    private val searchView by lazy { findViewById<SimpleSearchView>(R.id.searchView) }
+    private val tabLayout by lazy { findViewById<TabLayout>(R.id.tabLayout) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        setContentView(R.layout.activity_main)
 
         init()
     }
 
-    private fun init() = with(binding) {
+    private fun init() {
         setSupportActionBar(toolbar)
-        container.adapter = SectionsPagerAdapter(supportFragmentManager)
-        container.addOnPageChangeListener(TabLayoutOnPageChangeListener(tabLayout))
-        tabLayout.addOnTabSelectedListener(TabLayout.ViewPagerOnTabSelectedListener(container))
+        container.adapter = SectionsPagerAdapter(this)
+//        container.addOnPageChangeListener(TabLayoutOnPageChangeListener(tabLayout))
+//        tabLayout.addOnTabSelectedListener(TabLayout.ViewPagerOnTabSelectedListener(container))
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -45,40 +48,42 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-    private fun setupSearchView(menu: Menu) = with(binding) {
+    private fun setupSearchView(menu: Menu) {
         val item = menu.findItem(R.id.action_search)
-        searchView.setMenuItem(item)
-        searchView.setTabLayout(tabLayout)
-        searchView.setOnQueryTextListener(object : SimpleSearchView.OnQueryTextListener{
-            override fun onQueryTextChange(newText: String): Boolean {
-                Log.e(TAG, getString(R.string.changed, newText))
-                return false
-            }
+        searchView.apply {
+            setMenuItem(item)
+            setTabLayout(this@MainActivity.tabLayout)
+            setOnQueryTextListener(object : SimpleSearchView.OnQueryTextListener{
+                override fun onQueryTextChange(newText: String): Boolean {
+                    Log.e(TAG, getString(R.string.changed, newText))
+                    return false
+                }
 
-            override fun onQueryTextSubmit(query: String): Boolean {
-                Log.e(TAG, getString(R.string.submitted, query))
-                return false
-            }
+                override fun onQueryTextSubmit(query: String): Boolean {
+                    Log.e(TAG, getString(R.string.submitted, query))
+                    return false
+                }
 
-            override fun onQueryTextCleared(): Boolean {
-                Log.e(TAG, getString(R.string.cleared))
-                return false
-            }
-        })
+                override fun onQueryTextCleared(): Boolean {
+                    Log.e(TAG, getString(R.string.cleared))
+                    return false
+                }
+            })
+        }
 
         // Adding padding to the animation because of the hidden menu item
         val revealCenter = searchView.revealAnimationCenter
         revealCenter!!.x -= convertDpToPx(EXTRA_REVEAL_CENTER_PADDING, this@MainActivity)
     }
 
-    override fun onBackPressed() = with(binding) {
+    override fun onBackPressed() {
         if (searchView.onBackPressed()) {
             return
         }
         super.onBackPressed()
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) = with(binding) {
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (searchView.onActivityResult(requestCode, resultCode, data!!)) {
             return
         }
@@ -89,7 +94,7 @@ class MainActivity : AppCompatActivity() {
         override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
             val rootView = inflater.inflate(R.layout.fragment_main, container, false)
             val textView = rootView.findViewById<TextView>(R.id.section_label)
-            textView.text = getString(R.string.section_format, arguments!!.getInt(ARG_SECTION_NUMBER))
+            textView.text = getString(R.string.section_format, requireArguments().getInt(ARG_SECTION_NUMBER))
             return rootView
         }
 
@@ -105,14 +110,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    class SectionsPagerAdapter internal constructor(fm: FragmentManager) : FragmentPagerAdapter(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
-        override fun getItem(position: Int): Fragment {
-            return PlaceholderFragment.newInstance(position + 1)
-        }
+    class SectionsPagerAdapter internal constructor(fm: FragmentActivity) : FragmentStateAdapter(fm) {
 
-        override fun getCount(): Int {
-            return 3
-        }
+        override fun getItemCount() = 3
+
+        override fun createFragment(position: Int) = PlaceholderFragment.newInstance(position + 1)
     }
 
     companion object {
