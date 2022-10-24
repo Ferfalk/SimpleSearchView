@@ -16,7 +16,6 @@ import android.os.Parcelable
 import android.speech.RecognizerIntent
 import android.text.TextUtils
 import android.util.AttributeSet
-import android.util.Log
 import android.view.*
 import android.view.View.OnFocusChangeListener
 import android.view.inputmethod.EditorInfo
@@ -685,8 +684,9 @@ class SimpleSearchView @JvmOverloads constructor(creationContext: Context, attrs
 
         companion object {
             //required field that makes Parcelables from a Parcel
-            val CREATOR: Parcelable.Creator<SavedState?> = object : Parcelable.Creator<SavedState?> {
-                override fun createFromParcel(`in`: Parcel): SavedState? {
+            @JvmField
+            val CREATOR = object : Parcelable.Creator<SavedState?> {
+                override fun createFromParcel(`in`: Parcel): SavedState {
                     return SavedState(`in`)
                 }
 
