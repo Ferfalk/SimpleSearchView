@@ -71,7 +71,7 @@ class SimpleSearchView @JvmOverloads constructor(creationContext: Context, attrs
     var animationDuration = SimpleAnimationUtils.ANIMATION_DURATION_DEFAULT
 
     /**
-     * @param revealAnimationCenter center of the reveal animation, used to customize the origin of the animation
+     * The center of the reveal animation, used to customize the origin of the animation
      * @return center of the reveal animation, by default it is placed where the rightmost MenuItem would be
      */
     var revealAnimationCenter: Point? = null
@@ -108,15 +108,15 @@ class SimpleSearchView @JvmOverloads constructor(creationContext: Context, attrs
     private var searchIsClosing = false
     private var keepQuery = false
 
-    private val root by lazy { LayoutInflater.from(context).inflate(R.layout.search_view, null) }
-    private val searchContainer by lazy { root.findViewById<ConstraintLayout>(R.id.searchContainer) }
-    private val searchEditText by lazy { root.findViewById<EditText>(R.id.searchEditText) }
-    private val backButton by lazy { root.findViewById<ImageButton>(R.id.backButton) }
-    private val voiceButton by lazy  { root.findViewById<ImageButton>(R.id.voiceButton) }
-    private val clearButton by lazy { root.findViewById<ImageButton>(R.id.clearButton) }
-    private val bottomLine by lazy { root.findViewById<View>(R.id.bottomLine) }
+    private val searchContainer by lazy { findViewById<ConstraintLayout>(R.id.searchContainer) }
+    private val searchEditText by lazy { findViewById<EditText>(R.id.searchEditText) }
+    private val backButton by lazy { findViewById<ImageButton>(R.id.backButton) }
+    private val voiceButton by lazy  { findViewById<ImageButton>(R.id.voiceButton) }
+    private val clearButton by lazy { findViewById<ImageButton>(R.id.clearButton) }
+    private val bottomLine by lazy { findViewById<View>(R.id.bottomLine) }
 
     init {
+        inflate(context, R.layout.search_view, this)
         initStyle(attrs, defStyleAttr)
         initSearchEditText()
         initClickListeners()
@@ -294,6 +294,7 @@ class SimpleSearchView @JvmOverloads constructor(creationContext: Context, attrs
     }
 
     private val isVoiceAvailable: Boolean
+        @SuppressLint("QueryPermissionsNeeded")
         get() {
             if (isInEditMode) {
                 return true
@@ -465,7 +466,7 @@ class SimpleSearchView @JvmOverloads constructor(creationContext: Context, attrs
     /**
      * Will reset the search background as the default for the selected style
      *
-     * @param style STYLE_CARD or STYLE_BAR
+     * STYLE_CARD or STYLE_BAR
      */
     @get:Style
     var cardStyle: Int
@@ -676,17 +677,14 @@ class SimpleSearchView @JvmOverloads constructor(creationContext: Context, attrs
             out.writeInt(if (keepQuery) 1 else 0)
         }
 
-        companion object {
-            //required field that makes Parcelables from a Parcel
-            @JvmField
-            val CREATOR = object : Parcelable.Creator<SavedState?> {
-                override fun createFromParcel(`in`: Parcel): SavedState {
-                    return SavedState(`in`)
-                }
+        //required field that makes Parcelables from a Parcel
+        companion object CREATOR : Parcelable.Creator<SavedState?> {
+            override fun createFromParcel(`in`: Parcel): SavedState {
+                return SavedState(`in`)
+            }
 
-                override fun newArray(size: Int): Array<SavedState?> {
-                    return arrayOfNulls(size)
-                }
+            override fun newArray(size: Int): Array<SavedState?> {
+                return arrayOfNulls(size)
             }
         }
     }
