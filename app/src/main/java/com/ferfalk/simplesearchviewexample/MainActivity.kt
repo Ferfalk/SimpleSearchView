@@ -17,6 +17,7 @@ import androidx.viewpager2.widget.ViewPager2
 import com.ferfalk.simplesearchview.SimpleSearchView
 import com.ferfalk.simplesearchview.utils.DimensUtils.convertDpToPx
 import com.google.android.material.tabs.TabLayout
+import com.google.android.material.tabs.TabLayoutMediator
 
 class MainActivity : AppCompatActivity() {
 
@@ -26,19 +27,18 @@ class MainActivity : AppCompatActivity() {
     private val toolbar by lazy { findViewById<Toolbar>(R.id.toolbar) }
     private val searchView by lazy { findViewById<SimpleSearchView>(R.id.searchView) }
     private val tabLayout by lazy { findViewById<TabLayout>(R.id.tabLayout) }
+    private val tabTitles = arrayOf("Tab 1", "Tab 2", "Tab 3")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
         init()
     }
 
     private fun init() {
         setSupportActionBar(toolbar)
         container.adapter = SectionsPagerAdapter(this)
-//        container.addOnPageChangeListener(TabLayoutOnPageChangeListener(tabLayout))
-//        tabLayout.addOnTabSelectedListener(TabLayout.ViewPagerOnTabSelectedListener(container))
+        TabLayoutMediator(tabLayout, container) { tab, pos -> tab.text = tabTitles[pos]}.attach()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
