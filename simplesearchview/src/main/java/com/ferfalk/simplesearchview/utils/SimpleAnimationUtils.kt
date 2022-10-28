@@ -5,14 +5,10 @@ import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.graphics.Point
-import android.os.Build
 import android.view.View
 import android.view.ViewAnimationUtils
 import android.view.animation.Interpolator
-import androidx.annotation.RequiresApi
-import androidx.core.animation.addListener
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
-import java.util.*
 import kotlin.math.ceil
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -26,11 +22,7 @@ object SimpleAnimationUtils {
     @JvmStatic
     @JvmOverloads
     fun revealOrFadeIn(view: View, duration: Int = ANIMATION_DURATION_DEFAULT, listener: AnimationListener? = null, center: Point? = null): Animator {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            reveal(view, duration, listener, center)
-        } else {
-            fadeIn(view, duration, listener)
-        }
+        return reveal(view, duration, listener, center)
     }
 
     @JvmStatic
@@ -58,11 +50,7 @@ object SimpleAnimationUtils {
     @JvmStatic
     @JvmOverloads
     fun hideOrFadeOut(view: View, duration: Int = ANIMATION_DURATION_DEFAULT, listener: AnimationListener? = null, center: Point? = null): Animator {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            hide(view, duration, listener, center)
-        } else {
-            fadeOut(view, duration, listener)
-        }
+        return hide(view, duration, listener, center)
     }
 
     @JvmStatic
@@ -87,49 +75,41 @@ object SimpleAnimationUtils {
 
 
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun reveal(view: View, duration: Int): Animator {
         return reveal(view, duration, null, null)
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun reveal(view: View, duration: Int, center: Point?): Animator {
         return reveal(view, duration, null, center)
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun reveal(view: View, duration: Int, listener: AnimationListener?): Animator {
         return reveal(view, duration, listener, null)
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun reveal(view: View): Animator {
         return reveal(view, ANIMATION_DURATION_DEFAULT)
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun reveal(view: View, listener: AnimationListener?): Animator {
         return reveal(view, ANIMATION_DURATION_DEFAULT, listener, null)
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun reveal(view: View, center: Point?): Animator {
         return reveal(view, ANIMATION_DURATION_DEFAULT, null, center)
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun reveal(view: View, listener: AnimationListener?, center: Point?): Animator {
         return reveal(view, ANIMATION_DURATION_DEFAULT, listener, center)
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun reveal(view: View, duration: Int, listener: AnimationListener?, center: Point?): Animator {
         var centerMutable = center
@@ -150,49 +130,41 @@ object SimpleAnimationUtils {
 
 
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun hide(view: View, duration: Int): Animator {
         return hide(view, duration, null, null)
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun hide(view: View, duration: Int, center: Point?): Animator {
         return hide(view, duration, null, center)
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun hide(view: View, duration: Int, listener: AnimationListener?): Animator {
         return hide(view, duration, listener, null)
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun hide(view: View): Animator {
         return hide(view, ANIMATION_DURATION_DEFAULT)
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun hide(view: View, listener: AnimationListener?): Animator {
         return hide(view, ANIMATION_DURATION_DEFAULT, listener, null)
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun hide(view: View, center: Point?): Animator {
         return hide(view, ANIMATION_DURATION_DEFAULT, null, center)
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun hide(view: View, listener: AnimationListener?, center: Point?): Animator {
         return hide(view, ANIMATION_DURATION_DEFAULT, listener, center)
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun hide(view: View, duration: Int, listener: AnimationListener?, center: Point?): Animator {
         var centerMutable = center

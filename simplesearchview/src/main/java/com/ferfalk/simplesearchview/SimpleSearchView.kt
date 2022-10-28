@@ -1,5 +1,6 @@
 package com.ferfalk.simplesearchview
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -9,24 +10,24 @@ import android.graphics.Point
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
-import android.os.Build
 import android.os.Parcel
 import android.os.Parcelable
 import android.speech.RecognizerIntent
-import android.text.TextUtils
 import android.util.AttributeSet
-import android.util.Log
 import android.view.*
 import android.view.View.OnFocusChangeListener
 import android.view.inputmethod.EditorInfo
+import android.widget.EditText
 import android.widget.FrameLayout
+import android.widget.ImageButton
 import android.widget.TextView
 import androidx.annotation.ColorInt
 import androidx.annotation.DrawableRes
 import androidx.annotation.IntDef
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
+import androidx.core.text.trimmedLength
 import androidx.core.widget.ImageViewCompat
-import com.ferfalk.simplesearchview.databinding.SearchViewBinding
 import com.ferfalk.simplesearchview.utils.ContextUtils.getAccentColor
 import com.ferfalk.simplesearchview.utils.ContextUtils.getPrimaryColor
 import com.ferfalk.simplesearchview.utils.ContextUtils.hideKeyboard
@@ -45,19 +46,32 @@ import com.google.android.material.tabs.TabLayout
 /**
  * @author Fernando A. H. Falkiewicz
  */
+@SuppressLint("InflateParams")
 class SimpleSearchView @JvmOverloads constructor(creationContext: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) : FrameLayout(creationContext, attrs, defStyleAttr) {
+
+    companion object {
+        const val REQUEST_VOICE_SEARCH = 735
+        const val CARD_CORNER_RADIUS = 4
+        const val ANIMATION_CENTER_PADDING = 26
+        private const val CARD_PADDING = 6
+        private const val CARD_ELEVATION = 2
+        private const val BACK_ICON_ALPHA_DEFAULT = 0.87f
+        private const val ICONS_ALPHA_DEFAULT = 0.54f
+        const val STYLE_BAR = 0
+        const val STYLE_CARD = 1
+    }
+
     @IntDef(STYLE_BAR, STYLE_CARD)
     @kotlin.annotation.Retention(AnnotationRetention.SOURCE)
     annotation class Style
 
     /**
-     * @param animationDuration duration, in ms, of the reveal or fade animations
-     * @return current reveal or fade animations duration
+     * The duration (in ms) of the reveal or fade animations
      */
     var animationDuration = SimpleAnimationUtils.ANIMATION_DURATION_DEFAULT
 
     /**
-     * @param revealAnimationCenter center of the reveal animation, used to customize the origin of the animation
+     * The center of the reveal animation, used to customize the origin of the animation
      * @return center of the reveal animation, by default it is placed where the rightmost MenuItem would be
      */
     var revealAnimationCenter: Point? = null
@@ -94,7 +108,23 @@ class SimpleSearchView @JvmOverloads constructor(creationContext: Context, attrs
     private var searchIsClosing = false
     private var keepQuery = false
 
-    private val binding = SearchViewBinding.inflate(LayoutInflater.from(context), this, true)
+    private val searchContainer by lazy { findViewById<ConstraintLayout>(R.id.searchContainer) }
+    private val searchEditText by lazy { findViewById<EditText>(R.id.searchEditText) }
+    private val backButton by lazy { findViewById<ImageButton>(R.id.backButton) }
+    private val voiceButton by lazy  { findViewById<ImageButton>(R.id.voiceButton) }
+    private val clearButton by lazy { findViewById<ImageButton>(R.id.clearButton) }
+    private val bottomLine by lazy { findViewById<View>(R.id.bottomLine) }
+
+    init {
+        inflate(context, R.layout.search_view, this)
+        initStyle(attrs, defStyleAttr)
+        initSearchEditText()
+        initClickListeners()
+        showVoice(true)
+        if (!isInEditMode) {
+            visibility = INVISIBLE
+        }
+    }
 
     private fun initStyle(attrs: AttributeSet?, defStyleAttr: Int) {
         val typedArray = context.obtainStyledAttributes(attrs, R.styleable.SimpleSearchView, defStyleAttr, 0)
@@ -149,32 +179,32 @@ class SimpleSearchView @JvmOverloads constructor(creationContext: Context, attrs
         typedArray.recycle()
     }
 
-    private fun initSearchEditText() = with(binding) {
-        searchEditText.setOnEditorActionListener { _: TextView?, _: Int, _: KeyEvent? ->
+    private fun initSearchEditText() = with(searchEditText) {
+        setOnEditorActionListener { _: TextView?, _: Int, _: KeyEvent? ->
             onSubmitQuery()
             true
         }
-        searchEditText.addTextChangedListener(object : SimpleTextWatcher() {
+        addTextChangedListener(object : SimpleTextWatcher() {
             override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
                 if (!searchIsClosing) {
                     this@SimpleSearchView.onTextChanged(s)
                 }
             }
         })
-        searchEditText.onFocusChangeListener = OnFocusChangeListener { _: View?, hasFocus: Boolean ->
+        onFocusChangeListener = OnFocusChangeListener { _: View?, hasFocus: Boolean ->
             if (hasFocus) {
                 showKeyboard(searchEditText)
             }
         }
     }
 
-    private fun initClickListeners() = with(binding) {
+    private fun initClickListeners() {
         backButton.setOnClickListener { closeSearch() }
         clearButton.setOnClickListener { clearSearch() }
         voiceButton.setOnClickListener { voiceSearch() }
     }
 
-    override fun clearFocus() = with(binding) {
+    override fun clearFocus() {
         isClearingFocus = true
         hideKeyboard(this@SimpleSearchView)
         super.clearFocus()
@@ -182,7 +212,7 @@ class SimpleSearchView @JvmOverloads constructor(creationContext: Context, attrs
         isClearingFocus = false
     }
 
-    override fun requestFocus(direction: Int, previouslyFocusedRect: Rect?): Boolean = with(binding) {
+    override fun requestFocus(direction: Int, previouslyFocusedRect: Rect?): Boolean  {
         if (isClearingFocus) {
             return false
         }
@@ -228,14 +258,14 @@ class SimpleSearchView @JvmOverloads constructor(creationContext: Context, attrs
         activity.startActivityForResult(intent, REQUEST_VOICE_SEARCH)
     }
 
-    private fun clearSearch() = with(binding) {
+    private fun clearSearch() {
         searchEditText.text = null
         onQueryChangeListener?.onQueryTextCleared()
     }
 
-    private fun onTextChanged(newText: CharSequence) = with(binding) {
+    private fun onTextChanged(newText: CharSequence) {
         query = newText
-        val hasText = !TextUtils.isEmpty(newText)
+        val hasText = newText.isNotEmpty()
         if (hasText) {
             clearButton.visibility = VISIBLE
             showVoice(false)
@@ -243,25 +273,28 @@ class SimpleSearchView @JvmOverloads constructor(creationContext: Context, attrs
             clearButton.visibility = GONE
             showVoice(true)
         }
-        if (!TextUtils.equals(newText, oldQuery)) {
+        if(!(newText == oldQuery)) {
             onQueryChangeListener?.onQueryTextChange(newText.toString())
         }
         oldQuery = newText.toString()
     }
 
-    private fun onSubmitQuery() = with(binding) {
+    private fun onSubmitQuery() {
         val submittedQuery: CharSequence? = searchEditText.text
-        if (submittedQuery != null && TextUtils.getTrimmedLength(submittedQuery) > 0) {
-            if(onQueryChangeListener == null || !onQueryChangeListener!!.onQueryTextSubmit(submittedQuery.toString())) {
-                closeSearch()
-                searchIsClosing = true
-                searchEditText.text = null
-                searchIsClosing = false
+        submittedQuery?.let {
+            if(it.trimmedLength() > 0) {
+                if(onQueryChangeListener == null || !onQueryChangeListener!!.onQueryTextSubmit(submittedQuery.toString())) {
+                    closeSearch()
+                    searchIsClosing = true
+                    searchEditText.text = null
+                    searchIsClosing = false
+                }
             }
         }
     }
 
     private val isVoiceAvailable: Boolean
+        @SuppressLint("QueryPermissionsNeeded")
         get() {
             if (isInEditMode) {
                 return true
@@ -285,9 +318,9 @@ class SimpleSearchView @JvmOverloads constructor(creationContext: Context, attrs
      * @param animate true to animate
      */
     @JvmOverloads
-    fun showSearch(animate: Boolean = true) = with(binding) {
+    fun showSearch(animate: Boolean = true) {
         if (isSearchOpen) {
-            return null
+            return
         }
         searchEditText.setText(if (keepQuery) query else null)
         searchEditText.requestFocus()
@@ -313,9 +346,9 @@ class SimpleSearchView @JvmOverloads constructor(creationContext: Context, attrs
      * @param animate true if should be animated
      */
     @JvmOverloads
-    fun closeSearch(animate: Boolean = true) = with(binding) {
+    fun closeSearch(animate: Boolean = true) {
         if (!isSearchOpen) {
-            return null
+            return
         }
         searchIsClosing = true
         searchEditText.text = null
@@ -421,7 +454,7 @@ class SimpleSearchView @JvmOverloads constructor(creationContext: Context, attrs
             val matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
             if (!matches.isNullOrEmpty()) {
                 val searchWrd = matches[0]
-                if (!TextUtils.isEmpty(searchWrd)) {
+                if (searchWrd.isNotEmpty()) {
                     setQuery(searchWrd, submit)
                 }
             }
@@ -433,12 +466,12 @@ class SimpleSearchView @JvmOverloads constructor(creationContext: Context, attrs
     /**
      * Will reset the search background as the default for the selected style
      *
-     * @param style STYLE_CARD or STYLE_BAR
+     * STYLE_CARD or STYLE_BAR
      */
     @get:Style
     var cardStyle: Int
         get() = style
-        set(value) = with(binding) {
+        set(value) {
             style = value
             val layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
             var elevation = 0f
@@ -447,7 +480,7 @@ class SimpleSearchView @JvmOverloads constructor(creationContext: Context, attrs
                     searchContainer.background = cardStyleBackground
                     bottomLine.visibility = GONE
                     val cardPadding = convertDpToPx(CARD_PADDING, context)
-                    layoutParams.setMargins(cardPadding, cardPadding, cardPadding, cardPadding)
+                    cardPadding.let{ layoutParams.setMargins(it, it, it, it) }
                     elevation = convertDpToPx(CARD_ELEVATION, context).toFloat()
                 }
                 STYLE_BAR -> {
@@ -460,9 +493,7 @@ class SimpleSearchView @JvmOverloads constructor(creationContext: Context, attrs
                 }
             }
             searchContainer.layoutParams = layoutParams
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                searchContainer.elevation = elevation
-            }
+            searchContainer.elevation = elevation
         }
     private val cardStyleBackground: GradientDrawable
         get() {
@@ -475,7 +506,7 @@ class SimpleSearchView @JvmOverloads constructor(creationContext: Context, attrs
     /**
      * Sets icons alpha, does not set the back/up icon
      */
-    fun setIconsAlpha(alpha: Float) = with(binding) {
+    fun setIconsAlpha(alpha: Float) {
         clearButton.alpha = alpha
         voiceButton.alpha = alpha
     }
@@ -483,7 +514,7 @@ class SimpleSearchView @JvmOverloads constructor(creationContext: Context, attrs
     /**
      * Sets icons colors, does not set back/up icon
      */
-    fun setIconsColor(@ColorInt color: Int) = with(binding) {
+    fun setIconsColor(@ColorInt color: Int) {
         ImageViewCompat.setImageTintList(clearButton, ColorStateList.valueOf(color))
         ImageViewCompat.setImageTintList(voiceButton, ColorStateList.valueOf(color))
     }
@@ -491,69 +522,69 @@ class SimpleSearchView @JvmOverloads constructor(creationContext: Context, attrs
     /**
      * Sets the back/up icon alpha; does not set other icons
      */
-    fun setBackIconAlpha(alpha: Float) = with(binding) {
+    fun setBackIconAlpha(alpha: Float) {
         backButton.alpha = alpha
     }
 
     /**
      * Sets the back/up icon drawable; does not set other icons
      */
-    fun setBackIconColor(@ColorInt color: Int) = with(binding) {
+    fun setBackIconColor(@ColorInt color: Int) {
         ImageViewCompat.setImageTintList(backButton, ColorStateList.valueOf(color))
     }
 
     /**
      * Sets the back/up icon drawable
      */
-    fun setBackIconDrawable(drawable: Drawable?) = with(binding) {
+    fun setBackIconDrawable(drawable: Drawable?) {
         backButton.setImageDrawable(drawable)
     }
 
     /**
      * Sets a custom Drawable for the voice search button
      */
-    fun setVoiceIconDrawable(drawable: Drawable?) = with(binding) {
+    fun setVoiceIconDrawable(drawable: Drawable?) {
         voiceButton.setImageDrawable(drawable)
     }
 
     /**
      * Sets a custom Drawable for the clear text button
      */
-    fun setClearIconDrawable(drawable: Drawable?) = with(binding) {
+    fun setClearIconDrawable(drawable: Drawable?) {
         clearButton.setImageDrawable(drawable)
     }
 
-    fun setSearchBackground(background: Drawable?) = with(binding) {
+    fun setSearchBackground(background: Drawable?) {
         searchContainer.background = background
     }
 
-    fun setTextColor(@ColorInt color: Int) = with(binding) {
+    fun setTextColor(@ColorInt color: Int) {
         searchEditText.setTextColor(color)
     }
 
-    fun setHintTextColor(@ColorInt color: Int) = with(binding) {
+    fun setHintTextColor(@ColorInt color: Int) {
         searchEditText.setHintTextColor(color)
     }
 
-    fun setHint(hint: CharSequence?) = with(binding) {
+    fun setHint(hint: CharSequence?) {
         searchEditText.hint = hint
     }
 
-    fun setInputType(inputType: Int) = with(binding) {
+    fun setInputType(inputType: Int) {
         searchEditText.inputType = inputType
     }
 
     /**
      * Uses reflection to set the search EditText cursor drawable
      */
-    fun setCursorDrawable(@DrawableRes drawable: Int) = with(binding) {
+    fun setCursorDrawable(@DrawableRes drawable: Int) {
         setCursorDrawable(searchEditText, drawable)
     }
 
     /**
      * Uses reflection to set the search EditText cursor color
      */
-    fun setCursorColor(@ColorInt color: Int) = with(binding) {
+    fun setCursorColor(@ColorInt color: Int) {
         setCursorColor(searchEditText, color)
     }
 
@@ -565,14 +596,14 @@ class SimpleSearchView @JvmOverloads constructor(creationContext: Context, attrs
      * @param sequence  query text
      * @param submit true to submit the query
      */
-    fun setQuery(sequence: CharSequence?, submit: Boolean) = with(binding) {
+    fun setQuery(sequence: CharSequence?, submit: Boolean) {
         searchEditText.setText(sequence)
-        if (sequence != null) {
+        sequence?.let {
             searchEditText.setSelection(searchEditText.length())
-            query = sequence
-        }
-        if (submit && !TextUtils.isEmpty(sequence)) {
-            onSubmitQuery()
+            query = it
+            if (submit && it.isNotEmpty()) {
+                onSubmitQuery()
+            }
         }
     }
 
@@ -581,7 +612,7 @@ class SimpleSearchView @JvmOverloads constructor(creationContext: Context, attrs
      *
      * @param show true to enable the voice search icon
      */
-    fun showVoice(show: Boolean) = with(binding) {
+    fun showVoice(show: Boolean) {
         if (show && isVoiceAvailable && allowVoiceSearch) {
             voiceButton.visibility = VISIBLE
         } else {
@@ -646,16 +677,14 @@ class SimpleSearchView @JvmOverloads constructor(creationContext: Context, attrs
             out.writeInt(if (keepQuery) 1 else 0)
         }
 
-        companion object {
-            //required field that makes Parcelables from a Parcel
-            val CREATOR: Parcelable.Creator<SavedState?> = object : Parcelable.Creator<SavedState?> {
-                override fun createFromParcel(`in`: Parcel): SavedState? {
-                    return SavedState(`in`)
-                }
+        //required field that makes Parcelables from a Parcel
+        companion object CREATOR : Parcelable.Creator<SavedState?> {
+            override fun createFromParcel(`in`: Parcel): SavedState {
+                return SavedState(`in`)
+            }
 
-                override fun newArray(size: Int): Array<SavedState?> {
-                    return arrayOfNulls(size)
-                }
+            override fun newArray(size: Int): Array<SavedState?> {
+                return arrayOfNulls(size)
             }
         }
     }
@@ -703,25 +732,4 @@ class SimpleSearchView @JvmOverloads constructor(creationContext: Context, attrs
         fun onSearchViewClosedAnimation()
     }
 
-    companion object {
-        const val REQUEST_VOICE_SEARCH = 735
-        const val CARD_CORNER_RADIUS = 4
-        const val ANIMATION_CENTER_PADDING = 26
-        private const val CARD_PADDING = 6
-        private const val CARD_ELEVATION = 2
-        private const val BACK_ICON_ALPHA_DEFAULT = 0.87f
-        private const val ICONS_ALPHA_DEFAULT = 0.54f
-        const val STYLE_BAR = 0
-        const val STYLE_CARD = 1
-    }
-
-    init {
-        initStyle(attrs, defStyleAttr)
-        initSearchEditText()
-        initClickListeners()
-        showVoice(true)
-        if (!isInEditMode) {
-            visibility = INVISIBLE
-        }
-    }
 }
