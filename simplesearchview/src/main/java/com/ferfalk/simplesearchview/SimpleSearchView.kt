@@ -648,6 +648,7 @@ class SimpleSearchView @JvmOverloads constructor(creationContext: Context, attrs
 
         companion object {
             //required field that makes Parcelables from a Parcel
+            @JvmField
             val CREATOR: Parcelable.Creator<SavedState?> = object : Parcelable.Creator<SavedState?> {
                 override fun createFromParcel(`in`: Parcel): SavedState? {
                     return SavedState(`in`)
